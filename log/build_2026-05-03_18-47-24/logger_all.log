@@ -1,0 +1,205 @@
+[0.220s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build', '--merge-install']
+[0.220s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=True, symlink_install=False, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=16, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0x7a376a553550>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x7a376a553010>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x7a376a553010>>, mixin_verb=('build',))
+[0.475s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.475s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.475s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.475s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.475s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.475s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.475s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/monti/robot_localization_ws'
+[0.475s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.475s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.476s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.476s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.476s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.476s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.476s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.476s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.476s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.507s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.508s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.508s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.508s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.508s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.508s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.508s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.508s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws) by extensions ['ignore', 'ignore_ament_install']
+[0.508s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws) by extension 'ignore'
+[0.508s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws) by extension 'ignore_ament_install'
+[0.508s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws) by extensions ['colcon_pkg']
+[0.508s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws) by extension 'colcon_pkg'
+[0.508s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws) by extensions ['colcon_meta']
+[0.508s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws) by extension 'colcon_meta'
+[0.508s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws) by extensions ['ros']
+[0.508s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws) by extension 'ros'
+[0.509s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws) by extensions ['cmake', 'python']
+[0.509s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws) by extension 'cmake'
+[0.509s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws) by extension 'python'
+[0.509s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws) by extensions ['python_setup_py']
+[0.509s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws) by extension 'python_setup_py'
+[0.509s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/build) by extensions ['ignore', 'ignore_ament_install']
+[0.509s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/build) by extension 'ignore'
+[0.509s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/build) ignored
+[0.509s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/install) by extensions ['ignore', 'ignore_ament_install']
+[0.509s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/install) by extension 'ignore'
+[0.509s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/install) ignored
+[0.509s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/log) by extensions ['ignore', 'ignore_ament_install']
+[0.509s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/log) by extension 'ignore'
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/log) ignored
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src) by extensions ['ignore', 'ignore_ament_install']
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src) by extension 'ignore'
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src) by extension 'ignore_ament_install'
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src) by extensions ['colcon_pkg']
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src) by extension 'colcon_pkg'
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src) by extensions ['colcon_meta']
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src) by extension 'colcon_meta'
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src) by extensions ['ros']
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src) by extension 'ros'
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src) by extensions ['cmake', 'python']
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src) by extension 'cmake'
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src) by extension 'python'
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src) by extensions ['python_setup_py']
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src) by extension 'python_setup_py'
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/control_nodes) by extensions ['ignore', 'ignore_ament_install']
+[0.510s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/control_nodes) by extension 'ignore'
+[0.511s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/control_nodes) by extension 'ignore_ament_install'
+[0.511s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/control_nodes) by extensions ['colcon_pkg']
+[0.511s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/control_nodes) by extension 'colcon_pkg'
+[0.511s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/control_nodes) by extensions ['colcon_meta']
+[0.511s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/control_nodes) by extension 'colcon_meta'
+[0.511s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/control_nodes) by extensions ['ros']
+[0.511s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/control_nodes) by extension 'ros'
+[0.513s] DEBUG:colcon.colcon_core.package_identification:Failed to parse potential ROS package manifest in'ros2_ws/src/control_nodes': Error(s) in package 'ros2_ws/src/control_nodes/package.xml':
+Error(s):
+- The manifest of package "control_nodes" (with format version 3) must not contain the following tags: build_type
+[0.513s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/control_nodes) by extensions ['cmake', 'python']
+[0.513s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/control_nodes) by extension 'cmake'
+[0.513s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/control_nodes) by extension 'python'
+[0.514s] DEBUG:colcon.colcon_core.package_identification:Python package in 'ros2_ws/src/control_nodes' passes arguments to the setup() function which requires a different identification extension than 'python'
+[0.514s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/control_nodes) by extensions ['python_setup_py']
+[0.514s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/control_nodes) by extension 'python_setup_py'
+[0.926s] DEBUG:colcon.colcon_core.package_identification:Package 'ros2_ws/src/control_nodes' with type 'python' and name 'control_nodes'
+[0.927s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/robot_description_pkg) by extensions ['ignore', 'ignore_ament_install']
+[0.927s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/robot_description_pkg) by extension 'ignore'
+[0.927s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/robot_description_pkg) by extension 'ignore_ament_install'
+[0.927s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/robot_description_pkg) by extensions ['colcon_pkg']
+[0.927s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/robot_description_pkg) by extension 'colcon_pkg'
+[0.927s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/robot_description_pkg) by extensions ['colcon_meta']
+[0.927s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/robot_description_pkg) by extension 'colcon_meta'
+[0.927s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/robot_description_pkg) by extensions ['ros']
+[0.927s] Level 1:colcon.colcon_core.package_identification:_identify(ros2_ws/src/robot_description_pkg) by extension 'ros'
+[0.930s] DEBUG:colcon.colcon_core.package_identification:Package 'ros2_ws/src/robot_description_pkg' with type 'ros.ament_python' and name 'robot_description_pkg'
+[0.930s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.930s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.930s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.930s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.930s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.954s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.954s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.956s] WARNING:colcon.colcon_ros.prefix_path.ament:The path '/home/monti/robot_localization_ws/install/robot_description_pkg' in the environment variable AMENT_PREFIX_PATH doesn't exist
+[0.956s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 0 installed packages in /home/monti/robot_localization_ws/install
+[0.961s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 506 installed packages in /opt/ros/humble
+[0.965s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[1.044s] Level 5:colcon.colcon_core.verb:set package 'control_nodes' build argument 'cmake_args' from command line to 'None'
+[1.044s] Level 5:colcon.colcon_core.verb:set package 'control_nodes' build argument 'cmake_target' from command line to 'None'
+[1.044s] Level 5:colcon.colcon_core.verb:set package 'control_nodes' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[1.044s] Level 5:colcon.colcon_core.verb:set package 'control_nodes' build argument 'cmake_clean_cache' from command line to 'False'
+[1.044s] Level 5:colcon.colcon_core.verb:set package 'control_nodes' build argument 'cmake_clean_first' from command line to 'False'
+[1.044s] Level 5:colcon.colcon_core.verb:set package 'control_nodes' build argument 'cmake_force_configure' from command line to 'False'
+[1.044s] Level 5:colcon.colcon_core.verb:set package 'control_nodes' build argument 'ament_cmake_args' from command line to 'None'
+[1.044s] Level 5:colcon.colcon_core.verb:set package 'control_nodes' build argument 'catkin_cmake_args' from command line to 'None'
+[1.044s] Level 5:colcon.colcon_core.verb:set package 'control_nodes' build argument 'catkin_skip_building_tests' from command line to 'False'
+[1.044s] DEBUG:colcon.colcon_core.verb:Building package 'control_nodes' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/monti/robot_localization_ws/build/control_nodes', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/monti/robot_localization_ws/install', 'merge_install': True, 'path': '/home/monti/robot_localization_ws/ros2_ws/src/control_nodes', 'symlink_install': False, 'test_result_base': None}
+[1.045s] Level 5:colcon.colcon_core.verb:set package 'robot_description_pkg' build argument 'cmake_args' from command line to 'None'
+[1.045s] Level 5:colcon.colcon_core.verb:set package 'robot_description_pkg' build argument 'cmake_target' from command line to 'None'
+[1.045s] Level 5:colcon.colcon_core.verb:set package 'robot_description_pkg' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[1.045s] Level 5:colcon.colcon_core.verb:set package 'robot_description_pkg' build argument 'cmake_clean_cache' from command line to 'False'
+[1.045s] Level 5:colcon.colcon_core.verb:set package 'robot_description_pkg' build argument 'cmake_clean_first' from command line to 'False'
+[1.045s] Level 5:colcon.colcon_core.verb:set package 'robot_description_pkg' build argument 'cmake_force_configure' from command line to 'False'
+[1.045s] Level 5:colcon.colcon_core.verb:set package 'robot_description_pkg' build argument 'ament_cmake_args' from command line to 'None'
+[1.045s] Level 5:colcon.colcon_core.verb:set package 'robot_description_pkg' build argument 'catkin_cmake_args' from command line to 'None'
+[1.045s] Level 5:colcon.colcon_core.verb:set package 'robot_description_pkg' build argument 'catkin_skip_building_tests' from command line to 'False'
+[1.045s] DEBUG:colcon.colcon_core.verb:Building package 'robot_description_pkg' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/monti/robot_localization_ws/build/robot_description_pkg', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/monti/robot_localization_ws/install', 'merge_install': True, 'path': '/home/monti/robot_localization_ws/ros2_ws/src/robot_description_pkg', 'symlink_install': False, 'test_result_base': None}
+[1.045s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[1.047s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[1.047s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/monti/robot_localization_ws/ros2_ws/src/control_nodes'
+[1.050s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[1.050s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.050s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.056s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/monti/robot_localization_ws/ros2_ws/src/robot_description_pkg' with build type 'ament_python'
+[1.057s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_description_pkg', 'ament_prefix_path')
+[1.057s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/monti/robot_localization_ws/install/share/robot_description_pkg/hook/ament_prefix_path.ps1'
+[1.060s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/monti/robot_localization_ws/install/share/robot_description_pkg/hook/ament_prefix_path.dsv'
+[1.061s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/monti/robot_localization_ws/install/share/robot_description_pkg/hook/ament_prefix_path.sh'
+[1.062s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.062s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.907s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/monti/robot_localization_ws/ros2_ws/src/robot_description_pkg'
+[1.908s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[1.908s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[2.087s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/monti/robot_localization_ws/ros2_ws/src/control_nodes': PYTHONPATH=/home/monti/robot_localization_ws/build/control_nodes/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/monti/robot_localization_ws/install/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../../build/control_nodes build --build-base /home/monti/robot_localization_ws/build/control_nodes/build install --record /home/monti/robot_localization_ws/build/control_nodes/install.log --single-version-externally-managed install_data
+[2.518s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/monti/robot_localization_ws/ros2_ws/src/robot_description_pkg': PYTHONPATH=/home/monti/robot_localization_ws/build/robot_description_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/monti/robot_localization_ws/install/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../../build/robot_description_pkg build --build-base /home/monti/robot_localization_ws/build/robot_description_pkg/build install --record /home/monti/robot_localization_ws/build/robot_description_pkg/install.log --single-version-externally-managed install_data
+[2.530s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/monti/robot_localization_ws/ros2_ws/src/control_nodes' returned '0': PYTHONPATH=/home/monti/robot_localization_ws/build/control_nodes/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/monti/robot_localization_ws/install/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../../build/control_nodes build --build-base /home/monti/robot_localization_ws/build/control_nodes/build install --record /home/monti/robot_localization_ws/build/control_nodes/install.log --single-version-externally-managed install_data
+[2.533s] Level 1:colcon.colcon_core.environment:checking '/home/monti/robot_localization_ws/install' for CMake module files
+[2.534s] Level 1:colcon.colcon_core.environment:checking '/home/monti/robot_localization_ws/install' for CMake config files
+[2.535s] Level 1:colcon.colcon_core.environment:checking '/home/monti/robot_localization_ws/install/lib'
+[2.535s] Level 1:colcon.colcon_core.environment:checking '/home/monti/robot_localization_ws/install/bin'
+[2.536s] Level 1:colcon.colcon_core.environment:checking '/home/monti/robot_localization_ws/install/lib/pkgconfig/control_nodes.pc'
+[2.536s] Level 1:colcon.colcon_core.environment:checking '/home/monti/robot_localization_ws/install/lib/python3.10/site-packages'
+[2.536s] Level 1:colcon.colcon_core.shell:create_environment_hook('control_nodes', 'pythonpath')
+[2.536s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/monti/robot_localization_ws/install/share/control_nodes/hook/pythonpath.ps1'
+[2.538s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/monti/robot_localization_ws/install/share/control_nodes/hook/pythonpath.dsv'
+[2.538s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/monti/robot_localization_ws/install/share/control_nodes/hook/pythonpath.sh'
+[2.539s] Level 1:colcon.colcon_core.environment:checking '/home/monti/robot_localization_ws/install/bin'
+[2.539s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(control_nodes)
+[2.539s] INFO:colcon.colcon_core.shell:Creating package script '/home/monti/robot_localization_ws/install/share/control_nodes/package.ps1'
+[2.540s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/monti/robot_localization_ws/install/share/control_nodes/package.dsv'
+[2.541s] INFO:colcon.colcon_core.shell:Creating package script '/home/monti/robot_localization_ws/install/share/control_nodes/package.sh'
+[2.541s] INFO:colcon.colcon_core.shell:Creating package script '/home/monti/robot_localization_ws/install/share/control_nodes/package.bash'
+[2.542s] INFO:colcon.colcon_core.shell:Creating package script '/home/monti/robot_localization_ws/install/share/control_nodes/package.zsh'
+[2.543s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/monti/robot_localization_ws/install/share/colcon-core/packages/control_nodes)
+[2.495s] Level 1:colcon.colcon_core.environment:checking '/home/monti/robot_localization_ws/install' for CMake module files
+[2.496s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/monti/robot_localization_ws/ros2_ws/src/robot_description_pkg' returned '0': PYTHONPATH=/home/monti/robot_localization_ws/build/robot_description_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/monti/robot_localization_ws/install/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../../build/robot_description_pkg build --build-base /home/monti/robot_localization_ws/build/robot_description_pkg/build install --record /home/monti/robot_localization_ws/build/robot_description_pkg/install.log --single-version-externally-managed install_data
+[2.496s] Level 1:colcon.colcon_core.environment:checking '/home/monti/robot_localization_ws/install' for CMake config files
+[2.497s] Level 1:colcon.colcon_core.environment:checking '/home/monti/robot_localization_ws/install/lib'
+[2.497s] Level 1:colcon.colcon_core.environment:checking '/home/monti/robot_localization_ws/install/bin'
+[2.497s] Level 1:colcon.colcon_core.environment:checking '/home/monti/robot_localization_ws/install/lib/pkgconfig/robot_description_pkg.pc'
+[2.498s] Level 1:colcon.colcon_core.environment:checking '/home/monti/robot_localization_ws/install/lib/python3.10/site-packages'
+[2.498s] Level 1:colcon.colcon_core.shell:create_environment_hook('robot_description_pkg', 'pythonpath')
+[2.498s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/monti/robot_localization_ws/install/share/robot_description_pkg/hook/pythonpath.ps1'
+[2.499s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/monti/robot_localization_ws/install/share/robot_description_pkg/hook/pythonpath.dsv'
+[2.499s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/monti/robot_localization_ws/install/share/robot_description_pkg/hook/pythonpath.sh'
+[2.500s] Level 1:colcon.colcon_core.environment:checking '/home/monti/robot_localization_ws/install/bin'
+[2.500s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(robot_description_pkg)
+[2.500s] INFO:colcon.colcon_core.shell:Creating package script '/home/monti/robot_localization_ws/install/share/robot_description_pkg/package.ps1'
+[2.501s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/monti/robot_localization_ws/install/share/robot_description_pkg/package.dsv'
+[2.501s] INFO:colcon.colcon_core.shell:Creating package script '/home/monti/robot_localization_ws/install/share/robot_description_pkg/package.sh'
+[2.502s] INFO:colcon.colcon_core.shell:Creating package script '/home/monti/robot_localization_ws/install/share/robot_description_pkg/package.bash'
+[2.503s] INFO:colcon.colcon_core.shell:Creating package script '/home/monti/robot_localization_ws/install/share/robot_description_pkg/package.zsh'
+[2.504s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/monti/robot_localization_ws/install/share/colcon-core/packages/robot_description_pkg)
+[2.504s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[2.504s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[2.505s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[2.505s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[2.541s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.notify_send': Could not find 'notify-send'
+[2.541s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[2.541s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[2.541s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[2.541s] DEBUG:colcon.colcon_notification.desktop_notification.notify2:Failed to initialize notify2: org.freedesktop.DBus.Error.FileNotFound: Failed to connect to socket /run/user/1000/bus: No such file or directory
+[2.541s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[2.542s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/monti/robot_localization_ws/install/local_setup.ps1'
+[2.543s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/monti/robot_localization_ws/install/_local_setup_util_ps1.py'
+[2.544s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/monti/robot_localization_ws/install/setup.ps1'
+[2.545s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/monti/robot_localization_ws/install/local_setup.sh'
+[2.547s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/monti/robot_localization_ws/install/_local_setup_util_sh.py'
+[2.547s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/monti/robot_localization_ws/install/setup.sh'
+[2.548s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/monti/robot_localization_ws/install/local_setup.bash'
+[2.549s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/monti/robot_localization_ws/install/setup.bash'
+[2.550s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/monti/robot_localization_ws/install/local_setup.zsh'
+[2.550s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/monti/robot_localization_ws/install/setup.zsh'

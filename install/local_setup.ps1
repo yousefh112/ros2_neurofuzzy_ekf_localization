@@ -41,7 +41,7 @@ function _colcon_prefix_powershell_source_script {
 }
 
 # get all commands in topological order
-$_colcon_ordered_commands = & "$_colcon_python_executable" "$(Split-Path $PSCommandPath -Parent)/_local_setup_util_ps1.py" ps1
+$_colcon_ordered_commands = & "$_colcon_python_executable" "$(Split-Path $PSCommandPath -Parent)/_local_setup_util_ps1.py" ps1 --merged-install
 
 # execute all commands in topological order
 if ($env:COLCON_TRACE) {

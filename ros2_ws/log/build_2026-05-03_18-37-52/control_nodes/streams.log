@@ -1,0 +1,43 @@
+[1.272s] Invoking command in '/home/monti/robot_localization_ws/ros2_ws/src/control_nodes': PYTHONPATH=/home/monti/robot_localization_ws/ros2_ws/build/control_nodes/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/monti/robot_localization_ws/ros2_ws/install/control_nodes/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/control_nodes build --build-base /home/monti/robot_localization_ws/ros2_ws/build/control_nodes/build install --record /home/monti/robot_localization_ws/ros2_ws/build/control_nodes/install.log --install-scripts $base/lib/control_nodes --single-version-externally-managed install_data
+[1.604s] /usr/lib/python3/dist-packages/setuptools/dist.py:723: UserWarning: Usage of dash-separated 'script-dir' will not be supported in future versions. Please use the underscore name 'script_dir' instead
+[1.605s]   warnings.warn(
+[1.619s] running egg_info
+[1.619s] creating ../../build/control_nodes/control_nodes.egg-info
+[1.620s] writing ../../build/control_nodes/control_nodes.egg-info/PKG-INFO
+[1.620s] writing dependency_links to ../../build/control_nodes/control_nodes.egg-info/dependency_links.txt
+[1.621s] writing entry points to ../../build/control_nodes/control_nodes.egg-info/entry_points.txt
+[1.621s] writing requirements to ../../build/control_nodes/control_nodes.egg-info/requires.txt
+[1.621s] writing top-level names to ../../build/control_nodes/control_nodes.egg-info/top_level.txt
+[1.621s] writing manifest file '../../build/control_nodes/control_nodes.egg-info/SOURCES.txt'
+[1.623s] reading manifest file '../../build/control_nodes/control_nodes.egg-info/SOURCES.txt'
+[1.624s] writing manifest file '../../build/control_nodes/control_nodes.egg-info/SOURCES.txt'
+[1.660s] running build
+[1.660s] running build_py
+[1.660s] creating /home/monti/robot_localization_ws/ros2_ws/build/control_nodes/build
+[1.661s] creating /home/monti/robot_localization_ws/ros2_ws/build/control_nodes/build/lib
+[1.662s] creating /home/monti/robot_localization_ws/ros2_ws/build/control_nodes/build/lib/control_nodes
+[1.663s] copying control_nodes/__init__.py -> /home/monti/robot_localization_ws/ros2_ws/build/control_nodes/build/lib/control_nodes
+[1.663s] copying control_nodes/c2_node.py -> /home/monti/robot_localization_ws/ros2_ws/build/control_nodes/build/lib/control_nodes
+[1.663s] copying control_nodes/c1_node.py -> /home/monti/robot_localization_ws/ros2_ws/build/control_nodes/build/lib/control_nodes
+[1.663s] running install
+[1.664s] running install_lib
+[1.665s] creating /home/monti/robot_localization_ws/ros2_ws/install/control_nodes/lib/python3.10/site-packages/control_nodes
+[1.666s] copying /home/monti/robot_localization_ws/ros2_ws/build/control_nodes/build/lib/control_nodes/__init__.py -> /home/monti/robot_localization_ws/ros2_ws/install/control_nodes/lib/python3.10/site-packages/control_nodes
+[1.666s] copying /home/monti/robot_localization_ws/ros2_ws/build/control_nodes/build/lib/control_nodes/c2_node.py -> /home/monti/robot_localization_ws/ros2_ws/install/control_nodes/lib/python3.10/site-packages/control_nodes
+[1.666s] copying /home/monti/robot_localization_ws/ros2_ws/build/control_nodes/build/lib/control_nodes/c1_node.py -> /home/monti/robot_localization_ws/ros2_ws/install/control_nodes/lib/python3.10/site-packages/control_nodes
+[1.667s] byte-compiling /home/monti/robot_localization_ws/ros2_ws/install/control_nodes/lib/python3.10/site-packages/control_nodes/__init__.py to __init__.cpython-310.pyc
+[1.668s] byte-compiling /home/monti/robot_localization_ws/ros2_ws/install/control_nodes/lib/python3.10/site-packages/control_nodes/c2_node.py to c2_node.cpython-310.pyc
+[1.668s] byte-compiling /home/monti/robot_localization_ws/ros2_ws/install/control_nodes/lib/python3.10/site-packages/control_nodes/c1_node.py to c1_node.cpython-310.pyc
+[1.669s] running install_data
+[1.669s] creating /home/monti/robot_localization_ws/ros2_ws/install/control_nodes/share/ament_index
+[1.670s] creating /home/monti/robot_localization_ws/ros2_ws/install/control_nodes/share/ament_index/resource_index
+[1.671s] creating /home/monti/robot_localization_ws/ros2_ws/install/control_nodes/share/ament_index/resource_index/packages
+[1.671s] copying resource/control_nodes -> /home/monti/robot_localization_ws/ros2_ws/install/control_nodes/share/ament_index/resource_index/packages
+[1.672s] copying package.xml -> /home/monti/robot_localization_ws/ros2_ws/install/control_nodes/share/control_nodes
+[1.672s] running install_egg_info
+[1.674s] Copying ../../build/control_nodes/control_nodes.egg-info to /home/monti/robot_localization_ws/ros2_ws/install/control_nodes/lib/python3.10/site-packages/control_nodes-0.0.1-py3.10.egg-info
+[1.677s] running install_scripts
+[1.703s] Installing c1_node script to /home/monti/robot_localization_ws/ros2_ws/install/control_nodes/lib/control_nodes
+[1.704s] Installing c2_node script to /home/monti/robot_localization_ws/ros2_ws/install/control_nodes/lib/control_nodes
+[1.704s] writing list of installed files to '/home/monti/robot_localization_ws/ros2_ws/build/control_nodes/install.log'
+[1.785s] Invoked command in '/home/monti/robot_localization_ws/ros2_ws/src/control_nodes' returned '0': PYTHONPATH=/home/monti/robot_localization_ws/ros2_ws/build/control_nodes/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/monti/robot_localization_ws/ros2_ws/install/control_nodes/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/control_nodes build --build-base /home/monti/robot_localization_ws/ros2_ws/build/control_nodes/build install --record /home/monti/robot_localization_ws/ros2_ws/build/control_nodes/install.log --install-scripts $base/lib/control_nodes --single-version-externally-managed install_data

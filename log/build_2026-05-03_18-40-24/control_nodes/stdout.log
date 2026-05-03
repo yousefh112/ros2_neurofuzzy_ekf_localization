@@ -1,0 +1,41 @@
+running egg_info
+creating ../../../build/control_nodes/control_nodes.egg-info
+writing ../../../build/control_nodes/control_nodes.egg-info/PKG-INFO
+writing dependency_links to ../../../build/control_nodes/control_nodes.egg-info/dependency_links.txt
+writing entry points to ../../../build/control_nodes/control_nodes.egg-info/entry_points.txt
+writing requirements to ../../../build/control_nodes/control_nodes.egg-info/requires.txt
+writing top-level names to ../../../build/control_nodes/control_nodes.egg-info/top_level.txt
+writing manifest file '../../../build/control_nodes/control_nodes.egg-info/SOURCES.txt'
+reading manifest file '../../../build/control_nodes/control_nodes.egg-info/SOURCES.txt'
+writing manifest file '../../../build/control_nodes/control_nodes.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/monti/robot_localization_ws/build/control_nodes/build
+creating /home/monti/robot_localization_ws/build/control_nodes/build/lib
+creating /home/monti/robot_localization_ws/build/control_nodes/build/lib/control_nodes
+copying control_nodes/__init__.py -> /home/monti/robot_localization_ws/build/control_nodes/build/lib/control_nodes
+copying control_nodes/c2_node.py -> /home/monti/robot_localization_ws/build/control_nodes/build/lib/control_nodes
+copying control_nodes/c1_node.py -> /home/monti/robot_localization_ws/build/control_nodes/build/lib/control_nodes
+running install
+running install_lib
+creating /home/monti/robot_localization_ws/install/control_nodes/lib/python3.10/site-packages/control_nodes
+copying /home/monti/robot_localization_ws/build/control_nodes/build/lib/control_nodes/__init__.py -> /home/monti/robot_localization_ws/install/control_nodes/lib/python3.10/site-packages/control_nodes
+copying /home/monti/robot_localization_ws/build/control_nodes/build/lib/control_nodes/c2_node.py -> /home/monti/robot_localization_ws/install/control_nodes/lib/python3.10/site-packages/control_nodes
+copying /home/monti/robot_localization_ws/build/control_nodes/build/lib/control_nodes/c1_node.py -> /home/monti/robot_localization_ws/install/control_nodes/lib/python3.10/site-packages/control_nodes
+byte-compiling /home/monti/robot_localization_ws/install/control_nodes/lib/python3.10/site-packages/control_nodes/__init__.py to __init__.cpython-310.pyc
+byte-compiling /home/monti/robot_localization_ws/install/control_nodes/lib/python3.10/site-packages/control_nodes/c2_node.py to c2_node.cpython-310.pyc
+byte-compiling /home/monti/robot_localization_ws/install/control_nodes/lib/python3.10/site-packages/control_nodes/c1_node.py to c1_node.cpython-310.pyc
+running install_data
+creating /home/monti/robot_localization_ws/install/control_nodes/share
+creating /home/monti/robot_localization_ws/install/control_nodes/share/ament_index
+creating /home/monti/robot_localization_ws/install/control_nodes/share/ament_index/resource_index
+creating /home/monti/robot_localization_ws/install/control_nodes/share/ament_index/resource_index/packages
+copying resource/control_nodes -> /home/monti/robot_localization_ws/install/control_nodes/share/ament_index/resource_index/packages
+creating /home/monti/robot_localization_ws/install/control_nodes/share/control_nodes
+copying package.xml -> /home/monti/robot_localization_ws/install/control_nodes/share/control_nodes
+running install_egg_info
+Copying ../../../build/control_nodes/control_nodes.egg-info to /home/monti/robot_localization_ws/install/control_nodes/lib/python3.10/site-packages/control_nodes-0.0.1-py3.10.egg-info
+running install_scripts
+Installing c1_node script to /home/monti/robot_localization_ws/install/control_nodes/lib/control_nodes
+Installing c2_node script to /home/monti/robot_localization_ws/install/control_nodes/lib/control_nodes
+writing list of installed files to '/home/monti/robot_localization_ws/build/control_nodes/install.log'

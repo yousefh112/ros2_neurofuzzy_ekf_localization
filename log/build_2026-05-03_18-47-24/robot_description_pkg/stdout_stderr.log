@@ -1,0 +1,55 @@
+running egg_info
+creating ../../../build/robot_description_pkg/robot_description_pkg.egg-info
+writing ../../../build/robot_description_pkg/robot_description_pkg.egg-info/PKG-INFO
+writing dependency_links to ../../../build/robot_description_pkg/robot_description_pkg.egg-info/dependency_links.txt
+writing entry points to ../../../build/robot_description_pkg/robot_description_pkg.egg-info/entry_points.txt
+writing requirements to ../../../build/robot_description_pkg/robot_description_pkg.egg-info/requires.txt
+writing top-level names to ../../../build/robot_description_pkg/robot_description_pkg.egg-info/top_level.txt
+writing manifest file '../../../build/robot_description_pkg/robot_description_pkg.egg-info/SOURCES.txt'
+reading manifest file '../../../build/robot_description_pkg/robot_description_pkg.egg-info/SOURCES.txt'
+writing manifest file '../../../build/robot_description_pkg/robot_description_pkg.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/monti/robot_localization_ws/build/robot_description_pkg/build
+creating /home/monti/robot_localization_ws/build/robot_description_pkg/build/lib
+creating /home/monti/robot_localization_ws/build/robot_description_pkg/build/lib/robot_description_pkg
+copying robot_description_pkg/__init__.py -> /home/monti/robot_localization_ws/build/robot_description_pkg/build/lib/robot_description_pkg
+running install
+running install_lib
+creating /home/monti/robot_localization_ws/install/lib/python3.10/site-packages/robot_description_pkg
+copying /home/monti/robot_localization_ws/build/robot_description_pkg/build/lib/robot_description_pkg/__init__.py -> /home/monti/robot_localization_ws/install/lib/python3.10/site-packages/robot_description_pkg
+byte-compiling /home/monti/robot_localization_ws/install/lib/python3.10/site-packages/robot_description_pkg/__init__.py to __init__.cpython-310.pyc
+running install_data
+copying resource/robot_description_pkg -> /home/monti/robot_localization_ws/install/share/ament_index/resource_index/packages
+copying package.xml -> /home/monti/robot_localization_ws/install/share/robot_description_pkg
+creating /home/monti/robot_localization_ws/install/share/robot_description_pkg/launch
+copying launch/world_only.launch.py -> /home/monti/robot_localization_ws/install/share/robot_description_pkg/launch
+copying launch/control_nodes.launch.py -> /home/monti/robot_localization_ws/install/share/robot_description_pkg/launch
+copying launch/spawn_robot.launch.py -> /home/monti/robot_localization_ws/install/share/robot_description_pkg/launch
+creating /home/monti/robot_localization_ws/install/share/robot_description_pkg/worlds
+copying worlds/indoor_outdoor.world -> /home/monti/robot_localization_ws/install/share/robot_description_pkg/worlds
+creating /home/monti/robot_localization_ws/install/share/robot_description_pkg/urdf
+copying urdf/tb3_custom.urdf.xacro -> /home/monti/robot_localization_ws/install/share/robot_description_pkg/urdf
+copying urdf/tb3_sensors.gazebo.xacro -> /home/monti/robot_localization_ws/install/share/robot_description_pkg/urdf
+creating /home/monti/robot_localization_ws/install/share/robot_description_pkg/models
+creating /home/monti/robot_localization_ws/install/share/robot_description_pkg/models/indoor_outdoor
+copying models/indoor_outdoor/model.config -> /home/monti/robot_localization_ws/install/share/robot_description_pkg/models/indoor_outdoor
+copying models/indoor_outdoor/model.sdf -> /home/monti/robot_localization_ws/install/share/robot_description_pkg/models/indoor_outdoor
+creating /home/monti/robot_localization_ws/install/share/robot_description_pkg/meshes
+creating /home/monti/robot_localization_ws/install/share/robot_description_pkg/meshes/sensors
+copying meshes/sensors/r200.jpg -> /home/monti/robot_localization_ws/install/share/robot_description_pkg/meshes/sensors
+copying meshes/sensors/astra.jpg -> /home/monti/robot_localization_ws/install/share/robot_description_pkg/meshes/sensors
+copying meshes/sensors/lds.stl -> /home/monti/robot_localization_ws/install/share/robot_description_pkg/meshes/sensors
+copying meshes/sensors/astra.dae -> /home/monti/robot_localization_ws/install/share/robot_description_pkg/meshes/sensors
+copying meshes/sensors/r200.dae -> /home/monti/robot_localization_ws/install/share/robot_description_pkg/meshes/sensors
+creating /home/monti/robot_localization_ws/install/share/robot_description_pkg/meshes/wheels
+copying meshes/wheels/left_tire.stl -> /home/monti/robot_localization_ws/install/share/robot_description_pkg/meshes/wheels
+copying meshes/wheels/right_tire.stl -> /home/monti/robot_localization_ws/install/share/robot_description_pkg/meshes/wheels
+creating /home/monti/robot_localization_ws/install/share/robot_description_pkg/meshes/bases
+copying meshes/bases/burger_base.stl -> /home/monti/robot_localization_ws/install/share/robot_description_pkg/meshes/bases
+running install_egg_info
+Copying ../../../build/robot_description_pkg/robot_description_pkg.egg-info to /home/monti/robot_localization_ws/install/lib/python3.10/site-packages/robot_description_pkg-0.0.0-py3.10.egg-info
+running install_scripts
+Installing c1_node script to /home/monti/robot_localization_ws/install/lib/robot_description_pkg
+Installing c2_node script to /home/monti/robot_localization_ws/install/lib/robot_description_pkg
+writing list of installed files to '/home/monti/robot_localization_ws/build/robot_description_pkg/install.log'

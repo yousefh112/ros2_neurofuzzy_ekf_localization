@@ -110,7 +110,7 @@ _colcon_prefix_sh_source_script() {
 }
 
 # get all commands in topological order
-_colcon_ordered_commands="$($_colcon_python_executable "$_colcon_prefix_sh_COLCON_CURRENT_PREFIX/_local_setup_util_sh.py" sh)"
+_colcon_ordered_commands="$($_colcon_python_executable "$_colcon_prefix_sh_COLCON_CURRENT_PREFIX/_local_setup_util_sh.py" sh --merged-install)"
 unset _colcon_python_executable
 if [ -n "$COLCON_TRACE" ]; then
   echo "_colcon_prefix_sh_source_script() {
