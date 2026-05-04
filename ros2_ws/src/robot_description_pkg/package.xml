@@ -8,12 +8,14 @@
   <license>TODO: License declaration</license>
 
   <depend>rclcpp</depend>
+  <depend>rclpy</depend>
   <depend>gazebo_ros</depend>
   <depend>urdf</depend>
   <depend>xacro</depend>
   <depend>sensor_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
   <depend>tf2_ros</depend>
 
   <test_depend>ament_copyright</test_depend>

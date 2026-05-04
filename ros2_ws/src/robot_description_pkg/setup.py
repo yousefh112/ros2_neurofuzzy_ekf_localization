@@ -35,6 +35,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'c1_node = robot_description_pkg.controllers.c1_node:main',
+            'c2_node = robot_description_pkg.controllers.c2_node:main',
         ],
     },
 )

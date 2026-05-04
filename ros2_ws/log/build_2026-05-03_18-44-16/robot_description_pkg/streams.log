@@ -1,0 +1,22 @@
+[1.390s] Invoking command in '/home/monti/robot_localization_ws/ros2_ws/src/robot_description_pkg': PYTHONPATH=/home/monti/robot_localization_ws/ros2_ws/build/robot_description_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/monti/robot_localization_ws/ros2_ws/install/robot_description_pkg/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/robot_description_pkg build --build-base /home/monti/robot_localization_ws/ros2_ws/build/robot_description_pkg/build install --record /home/monti/robot_localization_ws/ros2_ws/build/robot_description_pkg/install.log --single-version-externally-managed install_data
+[1.743s] running egg_info
+[1.744s] writing ../../build/robot_description_pkg/robot_description_pkg.egg-info/PKG-INFO
+[1.748s] writing dependency_links to ../../build/robot_description_pkg/robot_description_pkg.egg-info/dependency_links.txt
+[1.748s] writing entry points to ../../build/robot_description_pkg/robot_description_pkg.egg-info/entry_points.txt
+[1.748s] writing requirements to ../../build/robot_description_pkg/robot_description_pkg.egg-info/requires.txt
+[1.749s] writing top-level names to ../../build/robot_description_pkg/robot_description_pkg.egg-info/top_level.txt
+[1.755s] reading manifest file '../../build/robot_description_pkg/robot_description_pkg.egg-info/SOURCES.txt'
+[1.757s] writing manifest file '../../build/robot_description_pkg/robot_description_pkg.egg-info/SOURCES.txt'
+[1.758s] running build
+[1.758s] running build_py
+[1.758s] running install
+[1.758s] running install_lib
+[1.761s] running install_data
+[1.761s] running install_egg_info
+[1.764s] removing '/home/monti/robot_localization_ws/ros2_ws/install/robot_description_pkg/lib/python3.10/site-packages/robot_description_pkg-0.0.0-py3.10.egg-info' (and everything under it)
+[1.764s] Copying ../../build/robot_description_pkg/robot_description_pkg.egg-info to /home/monti/robot_localization_ws/ros2_ws/install/robot_description_pkg/lib/python3.10/site-packages/robot_description_pkg-0.0.0-py3.10.egg-info
+[1.767s] running install_scripts
+[1.796s] Installing c1_node script to /home/monti/robot_localization_ws/ros2_ws/install/robot_description_pkg/lib/robot_description_pkg
+[1.797s] Installing c2_node script to /home/monti/robot_localization_ws/ros2_ws/install/robot_description_pkg/lib/robot_description_pkg
+[1.797s] writing list of installed files to '/home/monti/robot_localization_ws/ros2_ws/build/robot_description_pkg/install.log'
+[1.832s] Invoked command in '/home/monti/robot_localization_ws/ros2_ws/src/robot_description_pkg' returned '0': PYTHONPATH=/home/monti/robot_localization_ws/ros2_ws/build/robot_description_pkg/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/monti/robot_localization_ws/ros2_ws/install/robot_description_pkg/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/robot_description_pkg build --build-base /home/monti/robot_localization_ws/ros2_ws/build/robot_description_pkg/build install --record /home/monti/robot_localization_ws/ros2_ws/build/robot_description_pkg/install.log --single-version-externally-managed install_data
