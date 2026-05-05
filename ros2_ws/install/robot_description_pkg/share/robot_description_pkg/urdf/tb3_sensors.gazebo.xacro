@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <gazebo reference="imu_link">
+    <sensor name="tb3_imu" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <plugin name="tb3_imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <ros>
+          <namespace>/</namespace>
+          <remapping>~/out:=imu/data</remapping>
+        </ros>
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+      </plugin>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>0.000186</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>0.000186</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>0.000186</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>0.003</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>0.003</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>0.003</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference="gps_link">
+    <sensor name="tb3_gps" type="gps">
+      <always_on>true</always_on>
+      <update_rate>5.0</update_rate>
+      <plugin name="tb3_gps_plugin" filename="libgazebo_ros_gps_sensor.so">
+        <ros>
+          <namespace>/</namespace>
+          <remapping>~/out:=gps/fix</remapping>
+        </ros>
+        <frame_name>gps_link</frame_name>
+      </plugin>
+      <gps>
+        <position_sensing>
+          <horizontal>
+            <noise type="gaussian"><mean>0.0</mean><stddev>0.3162</stddev></noise>
+          </horizontal>
+          <vertical>
+            <noise type="gaussian"><mean>0.0</mean><stddev>0.3162</stddev></noise>
+          </vertical>
+        </position_sensing>
+      </gps>
+    </sensor>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="tb3_diff_drive" filename="libgazebo_ros_diff_drive.so">
+      <ros>
+        <namespace>/</namespace>
+        <remapping>cmd_vel:=cmd_vel</remapping>
+        <remapping>odom:=odom</remapping>
+      </ros>
+      <update_rate>30</update_rate>
+      
+      <left_joint>wheel_left_joint</left_joint>
+      <right_joint>wheel_right_joint</right_joint>
+      <wheel_separation>0.160</wheel_separation>
+      <wheel_diameter>0.066</wheel_diameter>
+      
+      <max_wheel_torque>20</max_wheel_torque>
+      <max_wheel_acceleration>1.0</max_wheel_acceleration>
+      
+      <publish_odom>true</publish_odom>
+      <publish_odom_tf>true</publish_odom_tf>
+      <publish_wheel_tf>false</publish_wheel_tf>
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
+      
+      <covariance_x>0.045796</covariance_x> 
+      <covariance_y>0.045796</covariance_y>
+      <covariance_yaw>0.110020</covariance_yaw> 
+    </plugin>
+  </gazebo>
+
+</robot>
