@@ -1,2 +1,0 @@
-Invoking command in '/home/monti/robot_localization_ws/ros2_ws/build/control_nodes': /usr/bin/cmake /home/monti/robot_localization_ws/ros2_ws/src/control_nodes -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/monti/robot_localization_ws/ros2_ws/install/control_nodes
-Invoked command in '/home/monti/robot_localization_ws/ros2_ws/build/control_nodes' returned '1': /usr/bin/cmake /home/monti/robot_localization_ws/ros2_ws/src/control_nodes -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/monti/robot_localization_ws/ros2_ws/install/control_nodes

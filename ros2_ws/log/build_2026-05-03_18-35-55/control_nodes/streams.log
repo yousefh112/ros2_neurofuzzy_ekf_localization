@@ -1,4 +1,0 @@
-[0.036s] Invoking command in '/home/monti/robot_localization_ws/ros2_ws/build/control_nodes': /usr/bin/cmake /home/monti/robot_localization_ws/ros2_ws/src/control_nodes -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/monti/robot_localization_ws/ros2_ws/install/control_nodes
-[0.053s] [0mCMake Error: The source directory "/home/monti/robot_localization_ws/ros2_ws/src/control_nodes" does not appear to contain CMakeLists.txt.
-[0.054s] Specify --help for usage, or press the help button on the CMake GUI.[0m
-[0.441s] Invoked command in '/home/monti/robot_localization_ws/ros2_ws/build/control_nodes' returned '1': /usr/bin/cmake /home/monti/robot_localization_ws/ros2_ws/src/control_nodes -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/monti/robot_localization_ws/ros2_ws/install/control_nodes

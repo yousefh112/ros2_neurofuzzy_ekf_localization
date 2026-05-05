@@ -1,48 +1,29 @@
-ekf_filter_node:
+/**:
   ros__parameters:
-
+    use_sim_time: true
     frequency: 30.0
-    sensor_timeout: 0.1
-    two_d_mode: false #we want 3D
+    sensor_timeout: 0.5
+    two_d_mode: true
+    publish_tf: false
     
-    # If you're having trouble, try setting this to true, and then echo the /diagnostics_agg topic to see if the node is
-    # unhappy with any settings or data.
-    print_diagnostics: false
-
-    # Whether to broadcast the transformation over the /tf topic. Defaults to true if unspecified.
-    publish_tf: false #is the CF that combines the two and publish everything
-
-    map_frame: map
     odom_frame: odom
-    base_link_frame: bbase_footprint
-    world_frame: map
-
-    # IMU
-    imu0: /imu/data # we have to decide the topic name
-    imu0_config: [false, false, false, # x, y, z (l'IMU do not measure position)
-                  false,  false,  false,  # roll, pitch, yaw 
-                  false, false, false, # vx, vy, vz (l'IMU do not measure linear velocity)
-                  false,  false,  true,  # v_roll, v_pitch, v_yaw 
-                  true,  true,  false]  # ax, ay, az 
-
-    # GPS
-   # Suppose that navsat_transform_node publish on /odometry/gps
+    base_link_frame: base_footprint
+    world_frame: odom
+    
+    zero_altitude: true
+    publish_filtered_gps: true
+    broadcast_cartesian_transform: false
+    
+    imu0: /imu/data
+    imu0_config: [false, false, false,
+                  false, false, false,
+                  false, false, false,
+                  false, false, true,
+                  true,  true,  false]
+    
     odom1: /odometry/gps
-    odom1_config: [true,  true,  false,  # x, y, z 
-                  false, false, false, # roll, pitch, yaw
-                  false, false, false, # vx, vy, vz
-                  false, false, false, # vroll, vpitch, vyaw
-                  false, false, false] # ax, ay, az
-                  
-    # Covarianza processo (Q1)
-    # take care that in the paper they use different orders for the state vector, so we have to be careful to put the right values in the right place
-    # also we should give 15 values, not 11 as paper gave us
-    process_noise_covariance: [
-      0.00038, 0.0, 0.0,    # x, y, z 
-      0.0, 0.0, 0.00015,    # roll, pitch, yaw 
-      0.0004, 0.0004, 0.0004, # vx, vy, vz 
-      0.0, 0.0, 0.0002,     # vroll, vpitch, vyaw 
-      0.0002, 0.00011, 0.00021 # ax, ay, az 
-    ]
-
-    # Measurement covariance (R1 → from sensors)
+    odom1_config: [true,  true,  false,
+                  false, false, false,
+                  false, false, false,
+                  false, false, false,
+                  false, false, false]
