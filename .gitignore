@@ -1,0 +1,9 @@
+# ROS2 Workspace Build Directories
+build/
+install/
+log/
+
+# IDEs and Editors
+.vscode/
+
+
