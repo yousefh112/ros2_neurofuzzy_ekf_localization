@@ -5,6 +5,28 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+
+find_package(rclcpp REQUIRED)
+find_package(behaviortree_cpp_v3 REQUIRED)
+
+add_executable(bt_brain src/main.cpp)
+ament_target_dependencies(bt_brain rclcpp behaviortree_cpp_v3)
+
+install(TARGETS
+  bt_brain
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Optional: Install the XML folder so it copies to the install directory
+install(DIRECTORY bt_xml/
+  DESTINATION share/${PROJECT_NAME}/bt_xml
+)
+
+
+
+
+
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)

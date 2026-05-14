@@ -1,0 +1,32 @@
+<root main_tree_to_execute="MainTree">
+    <BehaviorTree ID="MainTree">
+        <ReactiveFallback name="Localization_Strategy">
+
+            <Sequence name="Outdoor_GPS_Sequence">
+                <CheckGpsSignal name="CheckGpsSignal"/> 
+                <RunDualEKF name="RunDualEKF"/>
+                <TrainNeuralNetwork name="TrainNeuralNetwork"/>
+            </Sequence>
+
+            <Sequence name="Indoor_NoGPS_Sequence">
+                <HaltEKF1_UpdateEKF2 name="HaltEKF1_UpdateEKF2"/>
+                <RunNeuralNetworkInference name="RunNeuralNetworkInference"/>
+                <CalculateSlipError name="CalculateSlipError"/>
+                <RunFuzzyLogicController name="RunFuzzyLogicController"/>
+                <FuseNN_and_EKF2 name="FuseNN_and_EKF2"/>
+            </Sequence>
+
+        </ReactiveFallback>
+    </BehaviorTree>
+
+    <TreeNodesModel>
+        <Condition ID="CheckGpsSignal"/>
+        <Action ID="RunDualEKF"/>
+        <Action ID="TrainNeuralNetwork"/>
+        <Action ID="HaltEKF1_UpdateEKF2"/>
+        <Action ID="RunNeuralNetworkInference"/>
+        <Action ID="CalculateSlipError"/>
+        <Action ID="RunFuzzyLogicController"/>
+        <Action ID="FuseNN_and_EKF2"/>
+    </TreeNodesModel>
+</root>
