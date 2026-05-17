@@ -31,15 +31,15 @@ class TrajectoryController(Node):
         self.declare_parameter(
             'waypoints',
             [
-                [5.0, 0.0],
-                [5.0, 5.0],
-                [0.0, 5.0],
-                [-5.0, 5.0],
-                [-5.0, 0.0],
-                [-5.0, -5.0],
-                [0.0, -5.0],
-                [5.0, -5.0],
-                [5.0, 0.0],
+                5.0, 0.0,
+                5.0, 5.0,
+                0.0, 5.0,
+                -5.0, 5.0,
+                -5.0, 0.0,
+                -5.0, -5.0,
+                0.0, -5.0,
+                5.0, -5.0,
+                5.0, 0.0,
             ]
         )
         self.declare_parameter('linear_speed', 0.4)
@@ -48,8 +48,11 @@ class TrajectoryController(Node):
         self.declare_parameter('angle_threshold', 0.15)
 
         # Get parameters
-        waypoints_list = self.get_parameter('waypoints').value
-        self.waypoints = [(wp[0], wp[1]) for wp in waypoints_list]
+        waypoints_flat = self.get_parameter('waypoints').value
+        self.waypoints = [
+            (waypoints_flat[i], waypoints_flat[i + 1])
+            for i in range(0, len(waypoints_flat), 2)
+        ]
         self.linear_speed = self.get_parameter('linear_speed').value
         self.angular_gain = self.get_parameter('angular_gain').value
         self.distance_threshold = self.get_parameter('distance_threshold').value
