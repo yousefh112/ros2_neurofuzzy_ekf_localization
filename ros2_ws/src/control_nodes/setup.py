@@ -21,6 +21,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'trajectory_controller = control_nodes.trajectory_controller:main',
         ],
     },
 )
