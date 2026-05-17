@@ -21,8 +21,6 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'c1_node = control_nodes.c1_node:main',
-            'c2_node = control_nodes.c2_node:main',
         ],
     },
 )
