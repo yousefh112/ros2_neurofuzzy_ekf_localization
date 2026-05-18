@@ -10,7 +10,7 @@
           <namespace>/</namespace>
           <remapping>~/out:=imu/data</remapping>
         </ros>
-        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        <initial_orientation_as_reference>true</initial_orientation_as_reference>
       </plugin>
       <imu>
         <angular_velocity>
