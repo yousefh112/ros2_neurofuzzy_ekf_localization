@@ -208,12 +208,12 @@
   </joint>
 
   <gazebo reference="${namespace}wheel_left_link">
-  <mu1>1.0</mu1>
-  <mu2>1.0</mu2>
+  <mu1>2.0</mu1>
+  <mu2>2.0</mu2>
   </gazebo> 
   <gazebo reference="${namespace}wheel_right_link">
-  <mu1>1.0</mu1>
-  <mu2>1.0</mu2>
+  <mu1>2.0</mu1>
+  <mu2>2.0</mu2>
   </gazebo>
 
   <xacro:include filename="$(find robot_description_pkg)/urdf/tb3_sensors.gazebo.xacro"/>
