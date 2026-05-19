@@ -1,7 +1,7 @@
 from setuptools import find_packages
 from setuptools import setup
 
-package_name = 'control_nodes'
+package_name = 'control_pkg'
 
 setup(
     name=package_name,
@@ -21,7 +21,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'trajectory_controller = control_nodes.trajectory_controller:main',
+            'trajectory_controller = control_pkg.trajectory_controller:main',
         ],
     },
 )
