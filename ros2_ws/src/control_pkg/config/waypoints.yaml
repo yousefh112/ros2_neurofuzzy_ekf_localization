@@ -1,0 +1,27 @@
+# Trajectory Controller - Configuration File
+#
+# WAYPOINTS FORMAT:
+# Waypoints are defined as a flat list of float pairs (x, y) in meters.
+# Each consecutive pair represents one waypoint: [x1, y1, x2, y2, ...]
+# Example: to add waypoint (3.0, 2.0), append "3.0, 2.0" to the list.
+# To remove a waypoint, remove its pair of floats.
+# Minimum: 1 waypoint (2 floats). No maximum limit.
+#
+# TUNABLE PARAMETERS:
+# linear_speed      - forward speed in m/s (higher = faster, less stable)
+# angular_gain      - rotation aggressiveness (higher = snappier turns)
+# max_angular_speed - maximum rotation speed in rad/s (caps angular_gain)
+# distance_threshold - meters from waypoint center to consider it reached
+# angle_threshold   - radians of error below which forward motion starts
+# loop_trajectory   - if true, robot repeats trajectory indefinitely
+
+trajectory_controller:
+  ros__parameters:
+    waypoints: [6.0, 6.0, 7.0, 10.0, 10.0, 7.0, -5.0, 5.0, -5.0, 0.0,
+                -5.0, -5.0, 0.0, -5.0, 5.0, -5.0, 5.0, 0.0]
+    linear_speed: 0.4
+    angular_gain: 1.0
+    max_angular_speed: 1.0
+    distance_threshold: 0.15
+    angle_threshold: 0.15
+    loop_trajectory: false

@@ -44,8 +44,10 @@ class TrajectoryController(Node):
         )
         self.declare_parameter('linear_speed', 0.4)
         self.declare_parameter('angular_gain', 1.0)
+        self.declare_parameter('max_angular_speed', 1.0)
         self.declare_parameter('distance_threshold', 0.15)
         self.declare_parameter('angle_threshold', 0.15)
+        self.declare_parameter('loop_trajectory', False)
 
         # Get parameters
         waypoints_flat = self.get_parameter('waypoints').value
@@ -55,8 +57,10 @@ class TrajectoryController(Node):
         ]
         self.linear_speed = self.get_parameter('linear_speed').value
         self.angular_gain = self.get_parameter('angular_gain').value
+        self.max_angular_speed = self.get_parameter('max_angular_speed').value
         self.distance_threshold = self.get_parameter('distance_threshold').value
         self.angle_threshold = self.get_parameter('angle_threshold').value
+        self.loop_trajectory = self.get_parameter('loop_trajectory').value
 
         # State variables
         self.current_waypoint_idx = 0
@@ -81,8 +85,10 @@ class TrajectoryController(Node):
         self.get_logger().info(
             f'Linear speed: {self.linear_speed} m/s, '
             f'Angular gain: {self.angular_gain}, '
+            f'Max angular speed: {self.max_angular_speed} rad/s, '
             f'Distance threshold: {self.distance_threshold} m, '
-            f'Angle threshold: {self.angle_threshold} rad'
+            f'Angle threshold: {self.angle_threshold} rad, '
+            f'Loop trajectory: {self.loop_trajectory}'
         )
 
     def odom_callback(self, msg: Odometry) -> None:
@@ -116,9 +122,13 @@ class TrajectoryController(Node):
 
         # Check if all waypoints completed
         if self.current_waypoint_idx >= len(self.waypoints):
+            if self.loop_trajectory:
+                self.current_waypoint_idx = 0
+                self.trajectory_completed = False
+                self.get_logger().info('Restarting trajectory')
+                return
             self.trajectory_completed = True
             self.get_logger().info('Trajectory completed!')
-            # Publish zero velocity
             twist_msg = Twist()
             self.cmd_vel_pub.publish(twist_msg)
             return
@@ -172,6 +182,10 @@ class TrajectoryController(Node):
             twist_msg.linear.x = self.linear_speed
             twist_msg.angular.z = 0.5 * self.angular_gain * angle_error
 
+        twist_msg.angular.z = max(
+            -self.max_angular_speed,
+            min(self.max_angular_speed, twist_msg.angular.z)
+        )
         self.cmd_vel_pub.publish(twist_msg)
 
     def destroy_node(self):
