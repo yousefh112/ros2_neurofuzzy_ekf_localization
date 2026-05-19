@@ -10,9 +10,9 @@
           <namespace>/</namespace>
           <remapping>~/out:=imu/data</remapping>
         </ros>
-        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        <initial_orientation_as_reference>true</initial_orientation_as_reference>
       </plugin>
-      <!-- <imu>
+      <imu>
         <angular_velocity>
           <x><noise type="gaussian"><mean>0.0</mean><stddev>0.000186</stddev></noise></x>
           <y><noise type="gaussian"><mean>0.0</mean><stddev>0.000186</stddev></noise></y>
@@ -23,7 +23,7 @@
           <y><noise type="gaussian"><mean>0.0</mean><stddev>0.003</stddev></noise></y>
           <z><noise type="gaussian"><mean>0.0</mean><stddev>0.003</stddev></noise></z>
         </linear_acceleration>
-      </imu> -->
+      </imu>
     </sensor>
   </gazebo>
 
@@ -38,7 +38,7 @@
         </ros>
         <frame_name>gps_link</frame_name>
       </plugin>
-      <!-- <gps>
+      <gps>
         <position_sensing>
           <horizontal>
             <noise type="gaussian"><mean>0.0</mean><stddev>0.3162</stddev></noise>
@@ -47,7 +47,7 @@
             <noise type="gaussian"><mean>0.0</mean><stddev>0.3162</stddev></noise>
           </vertical>
         </position_sensing>
-      </gps> -->
+      </gps>
     </sensor>
   </gazebo>
 
@@ -74,9 +74,9 @@
       <odometry_frame>odom</odometry_frame>
       <robot_base_frame>base_footprint</robot_base_frame>
       
-      <!-- <covariance_x>0.045796</covariance_x> 
+      <covariance_x>0.045796</covariance_x> 
       <covariance_y>0.045796</covariance_y>
-      <covariance_yaw>0.110020</covariance_yaw> --> 
+      <covariance_yaw>0.110020</covariance_yaw>
     </plugin>
   </gazebo>
 
