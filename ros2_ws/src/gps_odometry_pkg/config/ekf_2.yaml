@@ -4,10 +4,6 @@ ekf_local2: # it has continous state estimation
     frequency: 30.0
     sensor_timeout: 0.5
     two_d_mode: true
-    # FIX 2a: publish_tf set to FALSE.
-    # ekf_local (EKF1) already owns the odom → base_footprint TF edge.
-    # A second publisher on the same edge causes TF tree instability and
-    # is the main reason /odometry/local2 and /odom appear to oscillate.
     publish_tf: false
     
     map_frame: map
@@ -16,8 +12,6 @@ ekf_local2: # it has continous state estimation
     world_frame: odom
     odom0: /odom
     #X,Y,Z,roll,pitch,yaw,X˙,Y˙,Z˙,roll˙,pitch˙,yaw˙,X¨,Y¨,Z¨
-    # T4 FIX: x,y set to FALSE — same rationale as ekf_local above.
-    # /odom positions are odom-frame relative, not absolute map measurements.
     odom0_config: [false, false, false,
                   false, false, true,
                   true,  true,  false,
@@ -35,21 +29,14 @@ ekf_local2: # it has continous state estimation
     imu0_differential: false        
     imu0_relative: false
     imu0_queue_size: 10
-    # T5 FIX: same rationale as ekf_local above.
     imu0_remove_gravitational_acceleration: true
-
-    # T6 FIX: same rationale as ekf_local.
     predict_to_current_time: true
-
-    # FIX: same initial_state fix as ekf_local — starts /odometry/local2 at spawn.
     initial_state: [5.0, 6.5, 0.0,
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0]
 
-    # Q aligned with ekf_local: Q_vx/Q_vy 0.03 → 0.005 for consistency
-    # and improved indoor dead-reckoning (same rationale as ekf_local).
     process_noise_covariance: [
       0.05,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
       0.0,   0.05,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
@@ -82,10 +69,6 @@ ekf_filter_node_gps_enc:
     base_link_frame: base_footprint
     world_frame: map
 
-    # ── odom0: raw wheel odometry (velocities + yaw_rate only) ───────────────
-    # T4 FIX: x,y=false — /odom is odom-frame relative, not map-frame absolute.
-    # Yaw and velocities from /odom are valid relative measurements in both frames
-    # (they describe robot motion, not absolute position).
     odom0: /odom
     odom0_config: [false, false, false,
                    false, false, true,
@@ -93,12 +76,7 @@ ekf_filter_node_gps_enc:
                    false, false, true,
                    false, false, false]
 
-    # T7-EQUIVALENT FIX: yaw=false in odom1_config.
-    #   navsat_transform uses use_odometry_yaw:true → /odometry/gps orientation
-    #   is derived from ekf_local output → fusing it back into KF2 global creates
-    #   the same circular feedback loop that caused KF1 divergence (T7, t+27s).
-    #   Yaw is already constrained by odom0_config (yaw=true from /odom directly).
-    #   Removing GPS yaw here eliminates the circular path without losing heading.
+
     odom1: /odometry/gps
     odom1_config: [true,  true,  false,
                    false, false, false,
@@ -106,20 +84,9 @@ ekf_filter_node_gps_enc:
                    false, false, false,
                    false, false, false]
 
-    # T6 FIX: predict to current time.
     predict_to_current_time: true
-
-    # S11 FIX: smooth_lagged_data — prevents out-of-sequence GPS innovations
-    # blowing up P. GPS at 5 Hz arrives in bursts during lock-acquisition;
-    # without this, multi-spike innovations cause KF2 to diverge (confirmed:
-    # dx=+3.43m at t=70s in run_1 bag, Session 12).
     smooth_lagged_data: true
     history_length: 0.5
-
-    # S11 FIX: tight initial_estimate_covariance.
-    # Default P0=1e-9×I is overconfident. First GPS arrives 0.3-0.5m off
-    # initial_state → huge innovation at t=0 → P blows up → KF2 diverges.
-    # P0 set to match sensor accuracy (GPS σ=0.316m → P_xx=0.10m²).
     # Order: x     y     z     roll  pitch yaw   vx    vy    vz    vr    vp    vy2   ax    ay    az
     initial_estimate_covariance: [
       0.10,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
@@ -139,30 +106,14 @@ ekf_filter_node_gps_enc:
       0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.01
     ]
 
-    # S11 FIX: buffer GPS burst arrivals; same rationale as KF1 odom0_queue_size.
-    # odom1 is the GPS input — queue on the GPS measurement source.
     odom1_queue_size: 5
 
-    # S11 FIX: initial_state — same as KF1 global.
-    # Without this KF2 starts at (0,0) while GPS ENU starts at (5,6.5) →
-    # massive innovation at t=0 → same P-blowup failure mode as KF1 pre-S11.
     initial_state: [5.0, 6.5, 0.0,
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0]
 
-    # PROCESS NOISE Q — S12 FIX: match KF1 empirically required values.
-    #
-    # ORIGINAL VALUES WERE PAPER VALUES (σ²≈0.016m) — WRONG FOR GAZEBO GPS:
-    #   Q_x=0.00016, Q_y=0.00041, Q_yaw=0.00003
-    #   These made KF2 too stiff (K≈0.002). Heading error compounds into
-    #   position error with near-zero GPS correction weight → same failure mode
-    #   as the KF1 Q=0.0002 experiment (§5.3 failed experiments).
-    #
-    # EMPIRICAL REQUIREMENT: Q_x/Q_y=0.05 (same as KF1, same GPS sensor σ=0.316m).
-    #   KF2 fuses the same /odometry/gps source as KF1. Same GPS noise
-    #   requires same Q to give GPS sufficient correction authority (K≈0.33).
     # Order: x      y      z      roll   pitch  yaw    vx     vy     vz     vroll  vpitch vyaw   ax     ay     az
     process_noise_covariance: [
       0.05,    0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,
@@ -192,9 +143,5 @@ navsat_transform2:
       broadcast_utm_transform: true
       publish_filtered_gps: true
       use_odometry_yaw: true
-      # DATUM = Gazebo world origin, same as navsat_transform in ekf_1.yaml.
-      # Both transforms must use the identical datum so /odometry/global and
-      # /odometry/global2 diverge only due to sensor fusion differences, not
-      # a mismatched map frame origin.
       wait_for_datum: false
       datum: [45.0500, 7.6600, 0.0]
