@@ -1,21 +1,3 @@
-"""
-Complementary Filter Node — Fixed (B7)
-=======================================
-
-Implements paper [P2] Eq. (2):
-  [x_kf_c, y_kf_c] = α1·[x_kf1, y_kf1] + α2·[x_kf2, y_kf2]
-
-Fixed α1=α2=0.5 (equal weighting of KF-1 GPS+IMU and KF-2 GPS+Odom).
-
-Output /odometry/fused is the training target for the ANN (paper Eq. 3).
-
-BUG FIXED:
-  [B7] child_frame_id was 'base_link' — all other nodes in this system use
-       'base_footprint'. TF consumers that expect 'base_footprint' as the child
-       frame of odometry messages (e.g. robot_localization's ekf_node when
-       checking frame consistency) would silently ignore messages with the
-       wrong child_frame_id.
-"""
 
 import rclpy
 from rclpy.node import Node
@@ -27,7 +9,7 @@ class ComplementaryFilter(Node):
     def __init__(self):
         super().__init__('complementary_filter_node')
 
-        # Fixed blending weights (paper §3.1, Eq. 2: α1+α2=1)
+        
         self.alpha1 = 0.5   # Weight for KF-1 (GPS+IMU)
         self.alpha2 = 0.5   # Weight for KF-2 (GPS+Odom)
 
@@ -66,7 +48,7 @@ class ComplementaryFilter(Node):
         out = Odometry()
         out.header.stamp    = msg1.header.stamp
         out.header.frame_id = 'map'
-        out.child_frame_id  = 'base_footprint'  # [B7 FIX] was 'base_link'
+        out.child_frame_id  = 'base_footprint' 
 
         out.pose.pose.position.x  = fused_x
         out.pose.pose.position.y  = fused_y

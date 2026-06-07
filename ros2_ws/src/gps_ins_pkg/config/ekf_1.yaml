@@ -5,9 +5,6 @@ ekf_local: # it has continous state estimation
     sensor_timeout: 0.5
     two_d_mode: true
     publish_tf: true # publishes odom → base_footprint TF edge.
-    # NOTE: ekf_local silently fails to publish TF under use_sim_time:true
-    # in ROS2 Humble (known upstream bug). bt_brain compensates by
-    # re-publishing this edge from its /odom subscription callback (T1).
     
     map_frame: map
     odom_frame: odom
@@ -15,13 +12,6 @@ ekf_local: # it has continous state estimation
     world_frame: odom
     odom0: /odom
     #X,Y,Z,roll,pitch,yaw,X˙,Y˙,Z˙,roll˙,pitch˙,yaw˙,X¨,Y¨,Z¨
-    # T4 FIX: x,y set to FALSE.
-    # /odom positions are wheel-encoder dead-reckoning in the odom frame
-    # (relative to robot start), NOT absolute map-frame measurements.
-    # Fusing them as absolute positions (true) caused the EKF to snap to
-    # the odom-frame origin when GPS dropped indoors, producing the position
-    # jump that sent the robot into the wall.
-    # Only velocities (x_dot, y_dot) and yaw_rate are fused from odometry.
     odom0_config: [false, false, false,
                   false, false, true,
                   true,  true,  false,
@@ -39,30 +29,9 @@ ekf_local: # it has continous state estimation
     imu0_differential: false        
     imu0_relative: false
     imu0_queue_size: 10
-    # T5 FIX: Remove gravitational acceleration from IMU ax,ay,az measurements.
-    # The Gazebo IMU plugin reports raw accelerometer data which includes the
-    # 9.81 m/s² gravity component. Without removal, the EKF integrates gravity
-    # as a forward/lateral acceleration during dead-reckoning (indoor, GPS-denied),
-    # causing rapid position drift proportional to ~0.5*g*t². At 0.003 m/s² IMU
-    # noise this is tolerable outdoors (GPS corrects it at 5 Hz), but indoors
-    # without GPS the bias accumulates unbounded.
     imu0_remove_gravitational_acceleration: true
-
-    # T6 FIX: Predict EKF state to the current time before publishing.
-    # Without this, ekf_local only updates when a sensor message arrives.
-    # At 30 Hz EKF with /odom at 50 Hz and /imu at 100 Hz, the published
-    # estimate can be up to 33ms stale. With use_sim_time:true and slow
-    # Gazebo clock, this lag compounds. predict_to_current_time eliminates
-    # the lag by running the kinematic prediction step on every output cycle.
     predict_to_current_time: true
 
-    # FIX: Start ekf_local at robot spawn position.
-    # Without this, ekf_local initialises at (0,0) in the odom frame while
-    # /odom (Gazebo diff_drive) starts at (5.0,6.5) — the spawn position.
-    # This caused /odometry/local to appear at (0,0) in PlotJuggler while
-    # all other topics were co-located at (5.0,6.5), producing the visible
-    # shift. ekf_local has world_frame:odom and fuses /odom velocities only,
-    # so it integrates from (0,0) by default. initial_state anchors it correctly.
     # Order: x  y  z  roll  pitch  yaw  vx  vy  vz  vroll  vpitch  vyaw  ax  ay  az
     initial_state: [5.0, 6.5, 0.0,
                     0.0, 0.0, 0.0,
@@ -70,12 +39,6 @@ ekf_local: # it has continous state estimation
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0]
 
-    # PROCESS NOISE Q (ekf_local — odom-frame, no GPS)
-    # FIX: Q_vx/Q_vy reduced 0.01 → 0.005 (indoor drift reduction).
-    # During GPS-denied indoor segments the EKF dead-reckons on velocity only.
-    # Q_vel controls how fast velocity uncertainty grows between IMU updates.
-    # Halving Q_vel: drift rate ∝ sqrt(Q_vel) → reduces indoor position drift
-    # from ~0.25m/120s to ~0.18m/120s without affecting outdoor GPS correction.
     # Order: x  y  z  roll  pitch  yaw  vx  vy  vz  vroll vpitch vyaw  ax  ay  az
     process_noise_covariance: [
       0.05,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
@@ -102,13 +65,7 @@ ekf_filter_node_gps_imu: # Global state estimation, it has discrete updates when
     frequency: 30.0
     sensor_timeout: 0.5
     two_d_mode: true
-    # T1 FIX: bt_brain now owns the map→odom TF edge exclusively.
-    # With publish_tf: true here AND bt_brain broadcasting, two publishers
-    # competed for the same edge causing TF instability. Setting false
-    # delegates all map→odom authority to bt_brain's 30 Hz wall timer,
-    # which publishes the BT-fused (ANN+FLS) corrected transform instead
-    # of the raw GPS-only EKF correction.
-    publish_tf: false
+    publish_tf: false #bt owns the map → odom TF
     
     map_frame: map
     odom_frame: odom
@@ -125,63 +82,23 @@ ekf_filter_node_gps_imu: # Global state estimation, it has discrete updates when
     imu0_differential: false       
     imu0_relative: false
     imu0_queue_size: 10
-    # T5 FIX: same rationale as ekf_local above.
-    # This instance fuses GPS+IMU in map frame. Gravity removal is critical
-    # here because when GPS drops indoors, this EKF dead-reckons on IMU alone.
-    # Without removal the gravity bias is the dominant error source during the
-    # entire indoor segment.
     imu0_remove_gravitational_acceleration: true
     
     odom0: /odometry/gps
-    # T7 REVERTED: yaw must stay FALSE.
-    #
-    # T7 caused EKF divergence at t+27s confirmed from rosbag analysis:
-    # /odometry/global position jumped 1.33m in 3 seconds near x=10.2
-    # (WP0 approach), sending the robot to orbit at (-1.6, 11.2) for 120s.
-    #
-    # Root cause of the instability:
-    #   navsat_transform (use_odometry_yaw:true) takes yaw FROM ekf_local output
-    #   → puts it in /odometry/gps orientation field
-    #   → ekf_filter_node_gps_imu fuses that yaw back into its own state
-    #   → ekf_local sources its yaw from /odom which is influenced by bt_brain TF
-    #   → bt_brain TF derives from /odometry/global (this EKF)
-    #   = closed feedback loop: EKF output → navsat_transform → EKF input
-    #   When the robot turned near the east building wall (GPS multipath),
-    #   the loop amplified the heading error until position exploded.
-    #
-    # Heading is already constrained by imu0_config yaw_rate (row 12, true)
-    # and odom0_config yaw (row 6, true in ekf_local). No additional yaw
-    # fusion is needed or safe here.
+
     odom0_config: [true,  true,  false,
                    false, false, false,
                    false, false, false,
                    false, false, false,
                    false, false, false]
 
-    # T6 FIX: Predict to current time for smooth output at 30 Hz.
-    # ekf_filter_node_gps_imu only gets GPS corrections at 5 Hz. Without
-    # predict_to_current_time, the published /odometry/global is the state
-    # from the last GPS correction (up to 200ms stale). With it, the EKF
-    # predicts forward using IMU+odom kinematics every 33ms, so the output
-    # is always current. Critical for the trajectory controller which runs
-    # at 10 Hz — it now always gets a fresh position estimate.
+
     predict_to_current_time: true
 
-    # F1 FIX: Reject outlier GPS measurements before they corrupt the covariance.
-    # The bag analysis showed P exploding to 10^319 (float64 overflow) during the
-    # GPS→INDOOR transition — a single large innovation when GPS jitters at the
-    # building boundary drives the gain K→1 and resets P to near-zero, which then
-    # feeds back into an unstable update cycle.
-    # smooth_lagged_data: true buffers late-arriving GPS and reprocesses in order,
-    # preventing out-of-sequence innovations that spike the innovation term.
+
     smooth_lagged_data: true
     history_length: 0.5   # seconds of history to maintain for lagged-data smoothing
 
-    # F1 FIX: Tight initial_estimate_covariance.
-    # Default robot_localization value is 1e-9 × I — effectively infinite confidence
-    # in the initial state. When the first GPS measurement arrives (often 0.3–0.5m
-    # from initial_state due to GPS startup noise), the huge innovation blows up P.
-    # Setting initial P to match sensor accuracy prevents the startup spike.
     # Order: x     y     z     roll  pitch yaw   vx    vy    vz    vr    vp    vy2   ax    ay    az
     initial_estimate_covariance: [
       0.10,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
@@ -201,29 +118,8 @@ ekf_filter_node_gps_imu: # Global state estimation, it has discrete updates when
       0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.01
     ]
 
-    odom0_queue_size: 5   # F1 FIX: buffer up to 5 GPS messages; drops bursts that arrive
-                           # simultaneously during GPS lock acquisition, preventing
-                           # the multi-spike innovation that precedes covariance blowup.
+    odom0_queue_size: 5   
 
-    # S21 FIX: Add /odom velocities to KF1 for improved indoor dead-reckoning.
-    #
-    # PROBLEM: KF1 previously dead-reckoned on IMU acceleration alone during
-    # GPS-denied indoor segments.  IMU integration over 10+ minutes accumulates
-    # velocity drift → large position error at GPS re-acquisition → large Kalman
-    # innovation → bt_fused jumps several metres when GPS resumes → visible
-    # offset in PlotJuggler between /odometry/global and /odom.
-    # Confirmed: Test 3 post-indoor pass GPS jump = ~8 m (log: #333 JUMP_REJECT).
-    #
-    # FIX: fuse wheel-odometry translational velocity (vx, vy) from /odom.
-    # In Gazebo simulation /odom is perfect (zero encoder noise, zero drift).
-    # Adding vx/vy anchors the EKF velocity state to encoder truth during
-    # GPS-denied segments.  Smaller velocity drift → smaller position drift
-    # → smaller GPS re-acquisition innovation → smoother bt_fused output and
-    # better alignment with /odom in PlotJuggler.
-    #
-    # SAFETY: Only vx/vy fused — no positions (x,y=false, avoids odom-frame /
-    # map-frame origin conflict) and no yaw_rate (already provided by imu0,
-    # double-counting would over-constrain heading).
     odom1: /odom
     odom1_config: [false, false, false,
                    false, false, false,
@@ -238,27 +134,6 @@ ekf_filter_node_gps_imu: # Global state estimation, it has discrete updates when
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0]
 
-    # PROCESS NOISE Q (ekf_filter_node_gps_imu — map-frame, GPS+IMU)
-    #
-    # Q_x/Q_y REVERTED: 0.01 → 0.05
-    #
-    # EMPIRICAL EVIDENCE from two consecutive runs:
-    #   Run 1 (Q=0.05): GPS-odom offset = 0.057m → 92/92 WPs reached ✓
-    #   Run 2 (Q=0.01): GPS-odom offset = 0.439m → robot stuck, crashed ✗
-    #
-    # With Q=0.01 the Kalman gain drops to K≈0.13. The EKF trusts its own
-    # kinematic prediction more between GPS updates. Any heading error
-    # compounds into position error during velocity integration, and the
-    # low GPS weight means the EKF cannot correct it fast enough.
-    # The larger Δy=+0.343m bias (vs -0.045m in run 1) caused the
-    # IndoorDetector GEOFENCE to fire 0.37m too early — robot was
-    # physically outside the building when GPS was disabled.
-    # Dead-reckoning then started with 0.37m northward error baked in,
-    # driving the robot into the south wall where it spun for 60s.
-    #
-    # Q=0.05 (K≈0.33) gives GPS 33% weight per tick — sufficient to
-    # keep the estimate close to truth and reject run-to-run GPS bias.
-    #
     # Order: x      y      z      roll   pitch  yaw    vx     vy     vz     vroll  vpitch vyaw   ax     ay     az
     process_noise_covariance: [
       0.05,    0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,
@@ -287,11 +162,5 @@ navsat_transform:
       broadcast_utm_transform: true
       publish_filtered_gps: true
       use_odometry_yaw: true
-      # DATUM = Gazebo world origin (matches indoor_outdoor.world spherical_coordinates).
-      # With this datum: map frame == Gazebo world frame.
-      # Robot spawns at Gazebo world (5.0, 6.5) → GPS reports map (5.0, 6.5)
-      # → /odom also starts at (5.0, 6.5) → all topics share the same reference.
-      # The global EKF is initialised at (5.0, 6.5) via initial_state above, so
-      # /odometry/global is correct from tick 1 and there is no visible shift in PlotJuggler.
       wait_for_datum: false
       datum: [45.0500, 7.6600, 0.0]
