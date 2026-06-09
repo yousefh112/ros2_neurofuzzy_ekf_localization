@@ -3,7 +3,7 @@
   <name>control_pkg</name>
   <version>0.0.1</version>
   <description>Control signal nodes c1 and c2 for mobile robot trajectory generation</description>
-  <maintainer email="todo@todo.com">todo</maintainer>
+  <maintainer email="360671@studenti.polito.it">Lorenzo_Montineri</maintainer>
   <license>MIT</license>
   <build_depend>ament_python</build_depend>
   <exec_depend>rclpy</exec_depend>
