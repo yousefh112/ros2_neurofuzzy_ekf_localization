@@ -1,43 +1,44 @@
 <?xml version="1.0"?>
+<!-- 
+  Gazebo Sensors and Actuators Configuration for TurtleBot3 Burger (Customized)
+  
+  This file defines all sensor and actuator plugins for the Gazebo simulation.
+  It is included by tb3_custom.urdf.xacro which provides the ${namespace} xacro 
+  property for consistent link/joint/frame references.
+  
+  Contents:
+  - IMU Sensor (BMI160-like, 100 Hz)
+  - GPS Sensor (5 Hz, 0.32m horizontal stddev)
+  - Differential Drive Actuator (30 Hz)
+  
+  NOTE: The base_scan link is kept only for visual mesh representation.
+        No LiDAR sensor plugin is included as this project does not use a laser scanner.
+  
+  Transform (TF) Note:
+  - publish_odom_tf is set to FALSE to prevent conflicts
+  - bt_brain node owns the odom → base_footprint TF transform
+  - It publishes this transform from /odom subscription at ~50 Hz
+  - The diff-drive plugin must not publish the same edge (prevents dual publishers)
+-->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <!--
-    Gazebo sensor & actuator plugins for the customised TurtleBot3 Burger.
-
-    Included by tb3_custom.urdf.xacro which defines the ${namespace}
-    xacro property, so all link / joint / frame references here use
-    that same prefix.
-
-    Sensors
-    =======
-    1. IMU        — libgazebo_ros_imu_sensor.so   → /imu/data  (100 Hz)
-    2. GPS        — libgazebo_ros_gps_sensor.so   → /gps/fix   (5 Hz)
-
-    NOTE: The base_scan link in the URDF is kept only for its visual
-    mesh (so the robot still looks correct). There is intentionally
-    NO LiDAR sensor plugin — this project does not use a laser scanner.
-
-    Actuator
-    ========
-    3. Diff-drive — libgazebo_ros_diff_drive.so   → /cmd_vel, /odom  (30 Hz)
-
-    TF NOTE: publish_odom_tf = FALSE.
-    bt_brain owns the odom → base_footprint TF edge (T1). It publishes
-    this transform from the /odom subscription callback at ~50 Hz wall-
-    clock rate. The diff-drive plugin must NOT also publish this edge or
-    two nodes would compete for the same TF transform.
-  -->
-
-  <!-- ═══════════════════════════════════════════════
-       1.  IMU  (BMI160-like — 100 Hz)
-       Now uses ${namespace}imu_link so the TF and
-       gazebo reference stay consistent under any
-       namespace.
-  ═══════════════════════════════════════════════════ -->
+  <!-- ========================================================================
+       IMU SENSOR - BMI160-like Inertial Measurement Unit
+       Update Rate: 100 Hz
+       Output Topic: /imu/data
+       
+       Description:
+       - Measures angular velocity and linear acceleration
+       - Includes Gaussian noise for simulation realism
+       - Uses ${namespace}imu_link for namespaced consistency
+  ======================================================================== -->
   <gazebo reference="${namespace}imu_link">
     <sensor name="tb3_imu" type="imu">
+      <!-- Sensor configuration -->
       <always_on>true</always_on>
       <update_rate>100</update_rate>
+      
+      <!-- ROS 2 plugin configuration -->
       <plugin name="tb3_imu_plugin" filename="libgazebo_ros_imu_sensor.so">
         <ros>
           <namespace>/</namespace>
@@ -46,29 +47,47 @@
         <initial_orientation_as_reference>false</initial_orientation_as_reference>
         <frame_name>${namespace}imu_link</frame_name>
       </plugin>
+      
+      <!-- IMU noise model (angular velocity and linear acceleration) -->
       <imu>
         <angular_velocity>
+          <!-- X-axis angular velocity noise (stddev: 0.000186 rad/s) -->
           <x><noise type="gaussian"><mean>0.0</mean><stddev>0.000186</stddev></noise></x>
+          <!-- Y-axis angular velocity noise (stddev: 0.000186 rad/s) -->
           <y><noise type="gaussian"><mean>0.0</mean><stddev>0.000186</stddev></noise></y>
+          <!-- Z-axis angular velocity noise (stddev: 0.000186 rad/s) -->
           <z><noise type="gaussian"><mean>0.0</mean><stddev>0.000186</stddev></noise></z>
         </angular_velocity>
         <linear_acceleration>
+          <!-- X-axis linear acceleration noise (stddev: 0.003 m/s²) -->
           <x><noise type="gaussian"><mean>0.0</mean><stddev>0.003</stddev></noise></x>
+          <!-- Y-axis linear acceleration noise (stddev: 0.003 m/s²) -->
           <y><noise type="gaussian"><mean>0.0</mean><stddev>0.003</stddev></noise></y>
+          <!-- Z-axis linear acceleration noise (stddev: 0.003 m/s²) -->
           <z><noise type="gaussian"><mean>0.0</mean><stddev>0.003</stddev></noise></z>
         </linear_acceleration>
       </imu>
     </sensor>
   </gazebo>
 
-  <!-- ═══════════════════════════════════════════════
-       2.  GPS  (5 Hz, ~0.32 m horizontal stddev)
-       Now uses ${namespace}gps_link.
-  ═══════════════════════════════════════════════════ -->
+  <!-- ========================================================================
+       GPS SENSOR - Global Positioning System
+       Update Rate: 5 Hz
+       Output Topic: /gps/fix
+       Horizontal Accuracy: ~0.32m (1-sigma)
+       
+       Description:
+       - Provides GPS measurements with Gaussian noise
+       - Simulates GPS positioning errors
+       - Uses ${namespace}gps_link for namespaced consistency
+  ======================================================================== -->
   <gazebo reference="${namespace}gps_link">
     <sensor name="tb3_gps" type="gps">
+      <!-- Sensor configuration -->
       <always_on>true</always_on>
       <update_rate>5.0</update_rate>
+      
+      <!-- ROS 2 plugin configuration -->
       <plugin name="tb3_gps_plugin" filename="libgazebo_ros_gps_sensor.so">
         <ros>
           <namespace>/</namespace>
@@ -76,11 +95,15 @@
         </ros>
         <frame_name>${namespace}gps_link</frame_name>
       </plugin>
+      
+      <!-- GPS noise model (horizontal and vertical positioning) -->
       <gps>
         <position_sensing>
+          <!-- Horizontal position noise (stddev: 0.3162m) -->
           <horizontal>
             <noise type="gaussian"><mean>0.0</mean><stddev>0.3162</stddev></noise>
           </horizontal>
+          <!-- Vertical position noise (stddev: 0.3162m) -->
           <vertical>
             <noise type="gaussian"><mean>0.0</mean><stddev>0.3162</stddev></noise>
           </vertical>
@@ -89,40 +112,61 @@
     </sensor>
   </gazebo>
 
-  <!-- ═══════════════════════════════════════════════
-       3.  Differential Drive  (30 Hz)
-       publish_odom_tf = FALSE: bt_brain (T1) owns the
-       odom → base_footprint TF edge via its /odom
-       subscription callback. Two publishers on the
-       same TF edge cause instability — plugin must not
-       publish it.
-  ═══════════════════════════════════════════════════ -->
+  <!-- ========================================================================
+       DIFFERENTIAL DRIVE ACTUATOR - Wheel Motor Control
+       Update Rate: 30 Hz
+       Input Topic: /cmd_vel (geometry_msgs/Twist)
+       Output Topics: /odom (nav_msgs/Odometry)
+       
+       Description:
+       - Controls left and right wheel motors
+       - Publishes odometry data from wheel encoders
+       - Maximum wheel torque: 20 Nm
+       - Maximum wheel acceleration: 1.0 rad/s²
+       
+       Transform (TF) Note:
+       - publish_odom_tf is FALSE: The bt_brain node owns the odom→base_footprint
+         transform and publishes it via /odom subscription at ~50 Hz wall-clock
+       - This prevents dual publishers on the same TF edge which causes instability
+       - publish_wheel_tf is FALSE: No individual wheel transforms published
+  ======================================================================== -->
   <gazebo>
     <plugin name="tb3_diff_drive" filename="libgazebo_ros_diff_drive.so">
+      <!-- ROS 2 plugin remapping -->
       <ros>
         <namespace>/</namespace>
         <remapping>cmd_vel:=cmd_vel</remapping>
         <remapping>odom:=odom</remapping>
       </ros>
+      
+      <!-- Update rate in Hz -->
       <update_rate>30</update_rate>
 
+      <!-- Wheel joint references (namespaced) -->
       <left_joint>${namespace}wheel_left_joint</left_joint>
       <right_joint>${namespace}wheel_right_joint</right_joint>
-      <wheel_separation>0.160</wheel_separation>
-      <wheel_diameter>0.066</wheel_diameter>
+      
+      <!-- Wheel parameters -->
+      <wheel_separation>0.160</wheel_separation>  <!-- Distance between wheel centers (m) -->
+      <wheel_diameter>0.066</wheel_diameter>       <!-- Wheel diameter (m) -->
 
-      <max_wheel_torque>20</max_wheel_torque>
-      <max_wheel_acceleration>1.0</max_wheel_acceleration>
+      <!-- Motor limits -->
+      <max_wheel_torque>20</max_wheel_torque>           <!-- Maximum torque per wheel (Nm) -->
+      <max_wheel_acceleration>1.0</max_wheel_acceleration>  <!-- Maximum acceleration (rad/s²) -->
 
-      <publish_odom>true</publish_odom>
-      <publish_odom_tf>false</publish_odom_tf>   <!-- set false when an EKF takes over -->
-      <publish_wheel_tf>false</publish_wheel_tf>
-      <odometry_frame>odom</odometry_frame>
-      <robot_base_frame>${namespace}base_footprint</robot_base_frame>
+      <!-- Transform publishing configuration -->
+      <publish_odom>true</publish_odom>                <!-- Publish odometry messages -->
+      <publish_odom_tf>false</publish_odom_tf>         <!-- Don't publish odom TF (EKF handles it) -->
+      <publish_wheel_tf>false</publish_wheel_tf>       <!-- Don't publish wheel transforms -->
+      
+      <!-- Frame names -->
+      <odometry_frame>odom</odometry_frame>            <!-- Odometry frame reference -->
+      <robot_base_frame>${namespace}base_footprint</robot_base_frame>  <!-- Robot base frame -->
 
-      <covariance_x>0.045796</covariance_x>
-      <covariance_y>0.045796</covariance_y>
-      <covariance_yaw>0.110020</covariance_yaw>
+      <!-- Odometry covariance values -->
+      <covariance_x>0.045796</covariance_x>    <!-- X-position covariance -->
+      <covariance_y>0.045796</covariance_y>    <!-- Y-position covariance -->
+      <covariance_yaw>0.110020</covariance_yaw>  <!-- Yaw angle covariance -->
     </plugin>
   </gazebo>
 

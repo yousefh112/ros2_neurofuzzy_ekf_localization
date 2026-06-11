@@ -35,9 +35,6 @@ setup(
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
-        # No executable nodes in this package.
-        # Add entries here if controller nodes are added under
-        # robot_description_pkg/controllers/.
         'console_scripts': [],
     },
 )

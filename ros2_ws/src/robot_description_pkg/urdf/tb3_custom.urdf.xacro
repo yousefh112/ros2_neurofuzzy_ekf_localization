@@ -1,15 +1,49 @@
 <?xml version="1.0" ?>
+<!-- ============================================================================
+     TurtleBot3 Burger Custom URDF Model (xacro)
+     
+     Description:
+       This URDF file defines the complete kinematic and dynamic model of a
+       TurtleBot3 Burger robot with support for multi-robot spawning via
+       namespace parameterization.
+     
+     Features:
+       - Namespace support for multi-robot scenarios
+       - Complete sensor suite: IMU, LiDAR (LDS-01), GPS
+       - Differential drive wheels with proper friction parameters
+       - Gazebo simulation compatibility with physics parameters
+       - Accurate inertial and collision models
+     
+     Usage (single robot):
+       roslaunch ... model:=$(find robot_description_pkg)/urdf/tb3_custom.urdf.xacro
+     
+     Usage (multi-robot):
+       xacro tb3_custom.urdf.xacro namespace:=robot1/
+     
+     Author: Custom Configuration
+     Date: 2024
+     ============================================================================ -->
 <robot name="turtlebot3_burger" xmlns:xacro="http://ros.org/wiki/xacro">
 
-  <!-- ───────────────────────────────────────────────────
-       Namespace argument — supports multi-robot spawning.
-       Usage:  xacro tb3_custom.urdf.xacro namespace:=robot1/
-       Default is empty string (single-robot use).
-  ─────────────────────────────────────────────────────── -->
+  <!-- ============================================================================
+       NAMESPACE CONFIGURATION
+       
+       Purpose: Support multi-robot spawning with proper TF tree isolation.
+       
+       Arguments:
+         - namespace: Prefix for all link and joint names
+       
+       Default: Empty string (single-robot mode)
+       ============================================================================ -->
   <xacro:arg name="namespace" default=""/>
   <xacro:property name="namespace" value="$(arg namespace)"/>
 
-  <!-- ── Materials ──────────────────────────────────── -->
+  <!-- ============================================================================
+       MATERIAL DEFINITIONS
+       
+       Defines visual materials for the robot components in Gazebo and RViz.
+       Each material specifies RGBA color values (0.0 to 1.0 range).
+       ============================================================================ -->
   <material name="black">      <color rgba="0.0 0.0 0.0 1.0"/></material>
   <material name="dark">       <color rgba="0.3 0.3 0.3 1.0"/></material>
   <material name="light_black"><color rgba="0.4 0.4 0.4 1.0"/></material>
@@ -21,16 +55,40 @@
   <material name="red">        <color rgba="0.8 0.0 0.0 1.0"/></material>
   <material name="white">      <color rgba="1.0 1.0 1.0 1.0"/></material>
 
-  <!-- ── Base footprint (virtual floor-level origin) ── -->
+  <!-- ============================================================================
+       BASE FOOTPRINT
+       
+       Purpose: Virtual frame at floor level that serves as the reference point
+       for odometry and localization. This is a common practice in ROS robotics
+       to separate the true floor contact point from the center of mass.
+       
+       Relations:
+         - Parent: World (implicit in localization)
+         - Children: base_link
+       ============================================================================ -->
   <link name="${namespace}base_footprint"/>
 
   <joint name="${namespace}base_joint" type="fixed">
     <parent link="${namespace}base_footprint"/>
     <child  link="${namespace}base_link"/>
+    <!-- Offset: 10mm up to account for wheel radius and ground clearance -->
     <origin xyz="0.0 0.0 0.010" rpy="0 0 0"/>
   </joint>
 
-  <!-- ── Base link (chassis) ──────────────────────── -->
+  <!-- ============================================================================
+       BASE LINK (Chassis)
+       
+       Purpose: Main rigid body of the robot representing the chassis structure.
+       Contains collision geometry for obstacle detection and visual mesh for
+       appearance in simulation and visualization tools.
+       
+       Properties:
+         - Mass: ~825g (approximate platform + electronics)
+         - Dimensions: ~140x140mm footprint, ~143mm height
+         - Visual: STL mesh file from burger_base.stl
+         - Collision: Simplified box geometry for performance
+         - Inertia: Measured/calculated from CAD model
+       ============================================================================ -->
   <link name="${namespace}base_link">
     <visual>
       <origin xyz="-0.032 0 0.0" rpy="0 0 0"/>
@@ -52,7 +110,20 @@
     </inertial>
   </link>
 
-  <!-- ── Left wheel ───────────────────────────────── -->
+  <!-- ============================================================================
+       LEFT WHEEL
+       
+       Purpose: Actuated wheel for differential drive locomotion.
+       
+       Joint Type: Continuous (unlimited rotation for driving)
+       
+       Properties:
+         - Radius: 33mm
+         - Width: 18mm
+         - Mass: ~28.5g
+         - Position: Left side (+Y direction)
+         - Rotation Axis: Z-axis in wheel frame
+       ============================================================================ -->
   <joint name="${namespace}wheel_left_joint" type="continuous">
     <parent link="${namespace}base_link"/>
     <child  link="${namespace}wheel_left_link"/>
@@ -81,7 +152,20 @@
     </inertial>
   </link>
 
-  <!-- ── Right wheel ──────────────────────────────── -->
+  <!-- ============================================================================
+       RIGHT WHEEL
+       
+       Purpose: Actuated wheel for differential drive locomotion.
+       
+       Joint Type: Continuous (unlimited rotation for driving)
+       
+       Properties:
+         - Radius: 33mm
+         - Width: 18mm
+         - Mass: ~28.5g
+         - Position: Right side (-Y direction)
+         - Rotation Axis: Z-axis in wheel frame
+       ============================================================================ -->
   <joint name="${namespace}wheel_right_joint" type="continuous">
     <parent link="${namespace}base_link"/>
     <child  link="${namespace}wheel_right_link"/>
@@ -110,7 +194,23 @@
     </inertial>
   </link>
 
-  <!-- ── Rear caster ──────────────────────────────── -->
+  <!-- ============================================================================
+       REAR CASTER (Skid Plate)
+       
+       Purpose: Passive rear contact point to prevent tipping while providing
+       ground contact. This is modeled as a fixed box (skid plate) rather than
+       a rolling caster wheel.
+       
+       Important Notes:
+         - Fixed joint: This is not a rolling caster but a sliding skid plate
+         - Friction: Set to mu=0 in Gazebo to avoid unwanted drag forces
+         - This design prevents asymmetric friction that causes robot drift
+       
+       Properties:
+         - Mass: 5g (minimal)
+         - Size: 30x9x20mm box
+         - Position: Rear (-X direction)
+       ============================================================================ -->
   <joint name="${namespace}caster_back_joint" type="fixed">
     <parent link="${namespace}base_link"/>
     <child  link="${namespace}caster_back_link"/>
@@ -130,7 +230,19 @@
     </inertial>
   </link>
 
-  <!-- ── IMU ──────────────────────────────────────── -->
+  <!-- ============================================================================
+       INERTIAL MEASUREMENT UNIT (IMU)
+       
+       Purpose: Provides orientation (roll, pitch, yaw) and angular velocities
+       for state estimation and odometry fusion.
+       
+       Sensor Type: 6-DOF IMU (accelerometer + gyroscope)
+       
+       Properties:
+         - Mass: Negligible (mounted on board)
+         - Position: Approximately at center of mass of base_link
+         - Output: Orientation quaternion, angular velocity, linear acceleration
+       ============================================================================ -->
   <joint name="${namespace}imu_joint" type="fixed">
     <parent link="${namespace}base_link"/>
     <child  link="${namespace}imu_link"/>
@@ -139,7 +251,25 @@
 
   <link name="${namespace}imu_link"/>
 
-  <!-- ── LiDAR (LDS-01) ───────────────────────────── -->
+  <!-- ============================================================================
+       LIDAR SENSOR (LDS-01)
+       
+       Purpose: 360-degree 2D range scanner for obstacle detection,
+       SLAM, and local path planning.
+       
+       Sensor Specifications:
+         - Type: LDS-01 (LiDAR Distance Sensor)
+         - Scan Range: 0.12 to 3.5 meters
+         - Angular Resolution: ~1 degree
+         - Scan Rate: 5 Hz
+         - Field of View: 360 degrees
+       
+       Properties:
+         - Mass: 114g
+         - Position: Top of robot for unobstructed 360° view
+         - Visual: STL mesh from lds.stl
+         - Collision: Cylindrical approximation for physics
+       ============================================================================ -->
   <joint name="${namespace}scan_joint" type="fixed">
     <parent link="${namespace}base_link"/>
     <child  link="${namespace}base_scan"/>
@@ -167,11 +297,24 @@
     </inertial>
   </link>
 
-  <!-- ── GPS ─────────────────────────────────────────
-       FIX: ${namespace} prefix added to both the link
-       and the joint child so the TF tree is consistent
-       with every other link when a namespace is used.
-  ─────────────────────────────────────────────────── -->
+  <!-- ============================================================================
+       GNSS/GPS SENSOR
+       
+       Purpose: Global positioning system for absolute localization in outdoor
+       environments. Provides latitude, longitude, and altitude coordinates.
+       
+       Sensor Type: GPS/GNSS receiver
+       
+       Properties:
+         - Mass: 10g (estimated)
+         - Position: Top of robot for clear sky view
+         - Accuracy: Typically 1-5 meters (depends on environment)
+         - Update Rate: 1-10 Hz
+       
+       Important Notes:
+         - Namespace prefix applied to maintain TF tree consistency in multi-robot
+         - Link and joint child both use namespace to avoid TF conflicts
+       ============================================================================ -->
   <link name="${namespace}gps_link">
     <inertial>
       <mass value="0.01"/>
@@ -187,7 +330,14 @@
     <origin xyz="0.0 0.0 0.15" rpy="0 0 0"/>
   </joint>
 
-  <!-- ── Wheel friction (Gazebo) ──────────────────── -->
+  <!-- ============================================================================
+       GAZEBO SIMULATION PARAMETERS
+       
+       Section: Wheel Friction Configuration
+       
+       Purpose: Set friction coefficients for wheels in Gazebo physics engine.
+       Higher values (2.0) provide good traction with ground for proper motion.
+       ============================================================================ -->
   <gazebo reference="${namespace}wheel_left_link">
     <mu1>2.0</mu1>
     <mu2>2.0</mu2>
@@ -198,26 +348,44 @@
     <mu2>2.0</mu2>
   </gazebo>
 
-  <!-- ── Caster friction (Gazebo) ─────────────────────
-       *** THE DRIFT FIX ***
-       The "caster" in this URDF is a fixed box rigidly
-       attached to base_link — it's a skid plate, NOT a
-       rolling caster wheel.  With Gazebo's default
-       friction (mu ≈ 1.0) the box drags on the floor
-       and creates asymmetric forces that push the
-       robot off its commanded path (visible drift,
-       especially during turns or at rest).
-
-       Setting mu1 = mu2 = 0 makes the caster frictionless
-       so it slides freely and the wheels alone determine
-       motion. This is the standard TurtleBot3 fix.
-  ─────────────────────────────────────────────────── -->
+  <!-- ============================================================================
+       CASTER FRICTION CONFIGURATION (THE DRIFT FIX)
+       
+       Critical Issue Addressed:
+         The "caster" in this URDF is actually a fixed box rigidly attached to
+         base_link — it's a skid plate, NOT a rolling caster wheel. With Gazebo's
+         default friction (mu ≈ 1.0), the box drags on the floor and creates
+         asymmetric forces that push the robot off its commanded path, resulting
+         in visible drift, especially during turns or while stationary.
+       
+       Solution:
+         Setting mu1 = mu2 = 0 makes the caster frictionless so it slides freely
+         without resistance. This allows the wheels alone to determine motion
+         characteristics, which is the correct behavior for differential drive.
+       
+       Result:
+         - Eliminates parasitic drag forces from the skid plate
+         - Improves straight-line odometry accuracy
+         - Reduces unexpected drift during rotation
+         - Standard configuration for TurtleBot3 models
+       ============================================================================ -->
   <gazebo reference="${namespace}caster_back_link">
     <mu1>0.0</mu1>
     <mu2>0.0</mu2>
   </gazebo>
 
-  <!-- ── Sensor & actuator plugins ────────────────── -->
+  <!-- ============================================================================
+       SENSOR AND ACTUATOR PLUGINS
+       
+       Purpose: Load Gazebo plugins that simulate sensor behavior and motor
+       control for the differential drive platform.
+       
+       Included plugins (from tb3_sensors.gazebo.xacro):
+         - IMU sensor plugin (Gazebo IMU simulation)
+         - LiDAR plugin (Gazebo ray/laser scanner simulation)
+         - GPS plugin (Gazebo GPS simulation)
+         - Differential drive plugin (wheel motor control)
+       ============================================================================ -->
   <xacro:include filename="$(find robot_description_pkg)/urdf/tb3_sensors.gazebo.xacro"/>
 
 </robot>

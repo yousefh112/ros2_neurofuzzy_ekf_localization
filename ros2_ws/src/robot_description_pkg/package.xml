@@ -4,13 +4,12 @@
   <name>robot_description_pkg</name>
   <version>0.0.0</version>
   <description>ROS 2 robot description package for a customised TurtleBot3 Burger.
-    Provides the URDF/Xacro model, Gazebo sensor plugins (LiDAR, IMU, GPS,
+    Provides the URDF/Xacro model, Gazebo sensor plugins (IMU, GPS,
     differential drive), a custom indoor/outdoor simulation world, and launch
     files for spawning the robot in Gazebo Classic.</description>
   <maintainer email="yousef_hesham.yh112@icloud.com">yousefabdelhady</maintainer>
   <license>Apache-2.0</license>
 
-  <!-- rclpy is needed for any Python nodes; rclcpp removed (pure Python package) -->
   <depend>rclpy</depend>
   <depend>gazebo_ros</depend>
   <depend>urdf</depend>
