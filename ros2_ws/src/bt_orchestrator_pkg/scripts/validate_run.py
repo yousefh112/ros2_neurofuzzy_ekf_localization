@@ -1,26 +1,16 @@
 #!/usr/bin/env python3
 """
-validate_run.py — Complete offline validation from rosbag + launch log
-=======================================================================
-Project : ROS2 Hybrid Indoor/Outdoor Localization (Session 8)
-Author  : PoliTo MSc — Autonomous Navigation
-
-HARDCODED PATHS (update if bag name changes):
-  Bags dir : ~/ros2_neurofuzzy_ekf_localization/ros2_ws/src/bt_orchestrator_pkg/
-  Log file : ~/launch_log.txt
+Offline validation from rosbag + launch log.
 
 USAGE:
-  # Auto-detect latest bag in the bags directory:
-  python3 validate_run.py
+  python3 validate_run.py                          # auto-detect latest bag
+  python3 validate_run.py --bag /path/to/bag_dir
+  python3 validate_run.py --bag /path/to/bag --log /path/to/launch_log.txt
 
-  # Explicit bag folder:
-  python3 validate_run.py --bag /path/to/run_bag_20260530_123456
+INSTALL (one-time):  pip install rosbags --break-system-packages
 
-  # Explicit bag + log:
-  python3 validate_run.py --bag /path/to/run_bag --log /path/to/launch_log.txt
-
-INSTALL DEPENDENCY (one-time):
-  pip install rosbags --break-system-packages
+Default bag dir: ~/ros2_neurofuzzy_ekf_localization/ros2_ws/src/bt_orchestrator_pkg/
+Default log:     ~/launch_log.txt
 """
 
 import argparse
@@ -34,17 +24,11 @@ import numpy as np
 from rosbags.rosbag2 import Reader
 from rosbags.typesys import Stores, get_typestore
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  HARDCODED PATHS
-# ─────────────────────────────────────────────────────────────────────────────
 DEFAULT_BAGS_DIR = os.path.expanduser(
     '~/ros2_neurofuzzy_ekf_localization/ros2_ws/src/bt_orchestrator_pkg'
 )
 DEFAULT_LOG = os.path.expanduser('~/launch_log.txt')
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  KPIs  — ALL must pass for run to be declared VALID
-# ─────────────────────────────────────────────────────────────────────────────
 KPI = {
     'spin_events_max':        0,      # ω_z > 0.5 rad/s AND v_x < 0.05 m/s
     'gps_offset_max_m':       0.50,   # max(|odom − gps|) < 0.50 m
@@ -61,9 +45,6 @@ KPI = {
 TYPESTORE = get_typestore(Stores.ROS2_HUMBLE)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  HELPERS
-# ─────────────────────────────────────────────────────────────────────────────
 def find_latest_bag(bags_dir: str) -> str:
     """Return the most recently modified bag directory under bags_dir."""
     candidates = sorted(
@@ -101,9 +82,6 @@ def iter_topic(reader, topic: str):
         yield ts, msg
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-#  VALIDATOR
-# ─────────────────────────────────────────────────────────────────────────────
 class RunValidator:
 
     def __init__(self, bag_path: str, log_path: str):
@@ -112,9 +90,7 @@ class RunValidator:
         self.results  = {}   # name → (value, limit, op, status_str)
         self._all_pass = True
 
-    # ── helpers ──────────────────────────────────────────────────────────────
     def _record(self, name: str, value, limit, op: str):
-        """Record a KPI result and update all_pass flag."""
         if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
             status = '⚠  NO DATA'
         elif op == '≤':
@@ -127,12 +103,7 @@ class RunValidator:
                 self._all_pass = False
         self.results[name] = (value, limit, op, status)
 
-    # ── 1. Spin events ───────────────────────────────────────────────────────
     def _check_spin_events(self, reader) -> int:
-        """
-        Spin event: ω_z > 0.50 rad/s AND v_x < 0.05 m/s simultaneously.
-        Per §10 decision 6: target = 0 with angular_gain=0.65, angle_threshold=0.70.
-        """
         spin = 0
         for ts, msg in iter_topic(reader, '/cmd_vel'):
             if (abs(msg.angular.z) > 0.50 and abs(msg.linear.x) < 0.05):
@@ -140,12 +111,7 @@ class RunValidator:
         self._record('Spin events', spin, KPI['spin_events_max'], '≤')
         return spin
 
-    # ── 2. GPS offset ────────────────────────────────────────────────────────
     def _check_gps_offset(self, reader) -> dict:
-        """
-        Compare /odom (geofence source, drift < 0.2m/100m) vs /odometry/gps.
-        Nominal GPS northward bias from Session 8: ~0.343 m.
-        """
         odom_buf, gps_buf = [], []
         for ts, msg in iter_topic(reader, '/odom'):
             odom_buf.append((ts, msg.pose.pose.position.x, msg.pose.pose.position.y))
@@ -165,9 +131,7 @@ class RunValidator:
         self._record('GPS offset max [m]', float(stats['max']), KPI['gps_offset_max_m'], '≤')
         return stats
 
-    # ── 3. ANN NaN check ─────────────────────────────────────────────────────
     def _check_ann_validity(self, reader):
-        """Check /odometry/bt_fused for NaN/Inf — bug B4 guard validation."""
         nan_count, total = 0, 0
         for ts, msg in iter_topic(reader, '/odometry/bt_fused'):
             x = msg.pose.pose.position.x
@@ -179,12 +143,7 @@ class RunValidator:
         self._record('ANN NaN msgs', nan_count, KPI['ann_nan_allowed'], '≤')
         return {'nan_count': nan_count, 'total': total}
 
-    # ── 4. EKF covariance divergence ─────────────────────────────────────────
     def _check_ekf_covariance(self, reader) -> float:
-        """
-        Monitor /odometry/global pose.covariance[0] (σ²_x) and [7] (σ²_y).
-        Divergence = either exceeds 5 m². T7 circular dep fix validation.
-        """
         max_cov = 0.0
         for ts, msg in iter_topic(reader, '/odometry/global'):
             cov_xx = msg.pose.covariance[0]
@@ -193,7 +152,6 @@ class RunValidator:
         self._record('EKF cov max [m²]', max_cov, KPI['ekf_cov_diverge_max'], '≤')
         return max_cov
 
-    # ── 5. Run duration ──────────────────────────────────────────────────────
     def _check_run_time(self, reader) -> float:
         ts_list = [ts for conn, ts, raw in reader.messages()]
         if not ts_list:
@@ -203,12 +161,7 @@ class RunValidator:
         self._record('Run time [s]', duration, KPI['run_time_max_s'], '≤')
         return duration
 
-    # ── 6. INDOOR transitions ────────────────────────────────────────────────
     def _check_transitions(self, reader) -> int:
-        """
-        Count state changes on /bt/indoor_detection.
-        Minimum 2: at least one outdoor→indoor and one indoor→outdoor transition.
-        """
         transitions, last = 0, None
         for ts, msg in iter_topic(reader, '/bt/indoor_detection'):
             state = msg.data
@@ -218,12 +171,7 @@ class RunValidator:
         self._record('Indoor transitions', transitions, KPI['indoor_transitions_min'], '≥')
         return transitions
 
-    # ── 7. RMSE vs ground truth ──────────────────────────────────────────────
     def _check_rmse_vs_gt(self, reader) -> float:
-        """
-        Compare /odometry/bt_fused vs /gazebo/model_states['turtlebot3_burger'].
-        Requires libgazebo_ros_state.so plugin in indoor_outdoor.world (added Session 9).
-        """
         bt_buf, gt_buf = [], []
         for ts, msg in iter_topic(reader, '/odometry/bt_fused'):
             x = msg.pose.pose.position.x
@@ -253,13 +201,10 @@ class RunValidator:
         self._record('RMSE vs GT [m]', rmse, KPI['rmse_bt_vs_gt_max_m'], '≤')
         return rmse
 
-    # ── 8. ANN diagnostics from /ann/diagnostics ─────────────────────────────
     def _check_ann_diagnostics(self, reader):
-        """
-        Parse /ann/diagnostics Float32MultiArray:
-          [0] n_samples  [1] last_loss  [2] weight_norm
-          [3] is_trained [4] gps_gate   [5] in_std_min  [6] tgt_std_min
-        """
+        # /ann/diagnostics Float32MultiArray layout:
+        # [0] n_samples  [1] last_loss  [2] weight_norm
+        # [3] is_trained [4] gps_gate   [5] in_std_min  [6] tgt_std_min
         max_samples, last_loss, min_std_seen = 0, float('nan'), float('inf')
         count = 0
         for ts, msg in iter_topic(reader, '/ann/diagnostics'):
@@ -283,7 +228,6 @@ class RunValidator:
                       f'— B4 guard may be insufficient at current robot speed')
         return max_samples, last_loss
 
-    # ── 9. Waypoints from launch log ─────────────────────────────────────────
     def _check_waypoints_from_log(self) -> int:
         if not os.path.exists(self.log_path):
             print(f'  ⚠  Launch log not found: {self.log_path}')
@@ -297,7 +241,6 @@ class RunValidator:
         self._record('WPs reached', count, KPI['waypoints_required'], '≥')
         return count
 
-    # ── 10. ANN sample count from log (fallback if no /ann/diagnostics) ──────
     def _check_ann_samples_from_log(self) -> int:
         if not os.path.exists(self.log_path):
             return 0
@@ -306,13 +249,8 @@ class RunValidator:
         matches = re.findall(r'Training buffer:\s*(\d+)', log)
         return max((int(m) for m in matches), default=0)
 
-    # ── GEOFENCE timing sanity ────────────────────────────────────────────────
     def _check_geofence_timing(self, reader):
-        """
-        Verify GEOFENCE fires when /odom y ≈ -4.00 (building_y_min_world).
-        Logs a warning if the transition happens > 0.3 m from the expected gate.
-        """
-        GATE_Y = -4.00
+        GATE_Y = -4.00  # building south boundary in /odom frame
         odom_buf = []
         for ts, msg in iter_topic(reader, '/odom'):
             odom_buf.append((ts, msg.pose.pose.position.y))
@@ -337,19 +275,16 @@ class RunValidator:
             print(f'    {flag}  t={t:7.1f}s  {frm:8s}→{to:8s}  '
                   f'/odom y={y:+.3f}m  Δ={err:.3f}m from gate')
 
-    # ── MAIN REPORT ───────────────────────────────────────────────────────────
     def run(self) -> bool:
         print('\n' + '═' * 58)
-        print('  HYBRID LOCALIZATION — SESSION 8 RUN VALIDATION')
+        print('  HYBRID LOCALIZATION — RUN VALIDATION')
         print('═' * 58)
         print(f'  Bag : {self.bag_path}')
         print(f'  Log : {self.log_path}')
         print('═' * 58 + '\n')
 
-        # ── Log-only checks (no bag needed) ──────────────────────────────────
         wps     = self._check_waypoints_from_log()
 
-        # ── Bag checks ───────────────────────────────────────────────────────
         with Reader(self.bag_path) as reader:
 
             # Show available topics
@@ -372,13 +307,10 @@ class RunValidator:
 
             self._check_geofence_timing(reader)
 
-        # ── GPS offset detail ─────────────────────────────────────────────────
         if gps:
             print(f'\n  GPS offset stats — mean={gps["mean"]:.3f}m  '
                   f'max={gps["max"]:.3f}m  std={gps["std"]:.3f}m')
-            print(f'  (Session 8 nominal northward bias: ~0.343 m)')
 
-        # ── KPI table ─────────────────────────────────────────────────────────
         print('\n' + '─' * 58)
         print(f'  {"CHECK":<30} {"VALUE":>10}   {"LIMIT":>8}')
         print('─' * 58)
@@ -394,7 +326,7 @@ class RunValidator:
             print(f'  {status}  {name:<30} {val_str}   {lim_str}')
 
         print('─' * 58)
-        verdict = ('🟢  ALL KPIs PASS — SESSION 8 VALIDATED'
+        verdict = ('🟢  ALL KPIs PASS'
                    if self._all_pass else
                    '🔴  FAILURES DETECTED — see table above')
         print(f'\n  {verdict}')
@@ -402,7 +334,6 @@ class RunValidator:
         return self._all_pass
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 def main():
     ap = argparse.ArgumentParser(
         description='Offline validation: rosbag + launch log → KPI report')

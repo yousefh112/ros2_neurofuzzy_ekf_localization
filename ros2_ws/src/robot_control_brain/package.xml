@@ -3,9 +3,17 @@
 <package format="3">
   <name>robot_control_brain</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>
+    Online ANN training node for indoor localization on TurtleBot3 Burger.
+    Trains a 15-10-5-2 feedforward network (log-sigmoid hidden, linear output)
+    on 15 features (IMU x6, Odometry x5, KF positions x4) during GPS-available
+    outdoor segments. Publishes learned position estimates on /ann/trajectory
+    for use in the GPS-denied indoor BT branch. Weights are persisted to
+    models/nn_weights.pt across runs.
+  </description>
+  <maintainer email="yousefhesham.yh112@gmail.com">YousefAbdelhady</maintainer>
   <maintainer email="francescopavesio@todo.todo">francescopavesio</maintainer>
-  <license>TODO: License declaration</license>
+  <license>Apache-2.0</license>
 
   <depend>rclpy</depend>
   <depend>std_msgs</depend>

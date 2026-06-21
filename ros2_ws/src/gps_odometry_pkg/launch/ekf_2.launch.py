@@ -1,15 +1,7 @@
-# Copyright 2018 Open Source Robotics Foundation, Inc.
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Standalone EKF2 launch (ekf_local2 + ekf_filter_node_gps_enc + navsat_transform2).
+# Not used by the system — use bt_orchestrator_pkg/launch/system.launch.py instead.
+# WARNING: Do NOT run this directly alongside system.launch.py. navsat_transform2
+# writes to /odometry/gps and races with navsat_transform, corrupting GPS→ENU for both EKFs.
 
 from launch import LaunchDescription
 import launch_ros.actions

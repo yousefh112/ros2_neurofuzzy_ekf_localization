@@ -1,11 +1,11 @@
-ekf_local2: # it has continous state estimation
+ekf_local2:
   ros__parameters:
     use_sim_time: true
     frequency: 30.0
     sensor_timeout: 0.5
     two_d_mode: true
-    publish_tf: false
-    
+    publish_tf: false  # ekf_local already owns odom→base_footprint; a second publisher would conflict
+
     map_frame: map
     odom_frame: odom
     base_link_frame: base_footprint
@@ -31,12 +31,15 @@ ekf_local2: # it has continous state estimation
     imu0_queue_size: 10
     imu0_remove_gravitational_acceleration: true
     predict_to_current_time: true
+    # Robot spawn position in indoor_outdoor.world (outdoor area north of building)
     initial_state: [5.0, 6.5, 0.0,
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0]
 
+    # Q_x=Q_y=0.05: empirically tuned for Gazebo GPS noise (σ≈0.316 m).
+    # Lower values cause covariance blowup during GPS-denied indoor segments.
     process_noise_covariance: [
       0.05,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
       0.0,   0.05,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
@@ -108,12 +111,14 @@ ekf_filter_node_gps_enc:
 
     odom1_queue_size: 5
 
+    # Robot spawn position in indoor_outdoor.world (outdoor area north of building)
     initial_state: [5.0, 6.5, 0.0,
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0]
 
+    # Q_x=Q_y=0.05: empirically tuned for Gazebo GPS noise (σ≈0.316 m).
     # Order: x      y      z      roll   pitch  yaw    vx     vy     vz     vroll  vpitch vyaw   ax     ay     az
     process_noise_covariance: [
       0.05,    0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,
@@ -133,6 +138,9 @@ ekf_filter_node_gps_enc:
       0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.01
     ]
 
+# navsat_transform2 is unused dead config. system.launch.py intentionally omits
+# this node — two navsat_transform instances on the same /odometry/gps topic
+# cause a race condition that corrupts GPS→ENU for both EKFs.
 navsat_transform2:
   ros__parameters:
       frequency: 30.0

@@ -1,4 +1,4 @@
-ekf_local: # it has continous state estimation
+ekf_local:
   ros__parameters:
     use_sim_time: true
     frequency: 30.0
@@ -32,6 +32,7 @@ ekf_local: # it has continous state estimation
     imu0_remove_gravitational_acceleration: true
     predict_to_current_time: true
 
+    # Robot spawn position in indoor_outdoor.world (outdoor area north of building)
     # Order: x  y  z  roll  pitch  yaw  vx  vy  vz  vroll  vpitch  vyaw  ax  ay  az
     initial_state: [5.0, 6.5, 0.0,
                     0.0, 0.0, 0.0,
@@ -39,6 +40,8 @@ ekf_local: # it has continous state estimation
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0]
 
+    # Q_x=Q_y=0.05: empirically tuned for Gazebo GPS noise (σ≈0.316 m).
+    # Lower values cause covariance blowup during GPS-denied indoor segments.
     # Order: x  y  z  roll  pitch  yaw  vx  vy  vz  vroll vpitch vyaw  ax  ay  az
     process_noise_covariance: [
       0.05,  0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,   0.0,
@@ -59,7 +62,7 @@ ekf_local: # it has continous state estimation
     ]
 
 
-ekf_filter_node_gps_imu: # Global state estimation, it has discrete updates when GPS measurements arrive
+ekf_filter_node_gps_imu:
   ros__parameters:
     use_sim_time: true
     frequency: 30.0
@@ -128,12 +131,14 @@ ekf_filter_node_gps_imu: # Global state estimation, it has discrete updates when
                    false, false, false]
     odom1_queue_size: 5
 
+    # Robot spawn position in indoor_outdoor.world (outdoor area north of building)
     initial_state: [5.0, 6.5, 0.0,
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0,
                     0.0, 0.0, 0.0]
 
+    # Q_x=Q_y=0.05: empirically tuned for Gazebo GPS noise (σ≈0.316 m).
     # Order: x      y      z      roll   pitch  yaw    vx     vy     vz     vroll  vpitch vyaw   ax     ay     az
     process_noise_covariance: [
       0.05,    0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,     0.0,

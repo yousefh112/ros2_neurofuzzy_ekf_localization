@@ -3,7 +3,14 @@
 <package format="3">
   <name>gps_ins_pkg</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>
+    EKF-based GPS+IMU localization stack (KF-1) for TurtleBot3 Burger.
+    Runs ekf_local (continuous odom+IMU EKF, publishes odom to base_footprint TF),
+    ekf_filter_node_gps_imu (global GPS+IMU EKF, output /odometry/global),
+    navsat_transform (GPS lat/lon to ENU frame, output /odometry/gps), and the
+    fixed-weight complementary filter node (KF1+KF2, output /odometry/fused).
+  </description>
+  <maintainer email="yousefhesham.yh112@gmail.com">YousefAbdelhady</maintainer>
   <maintainer email="s353110@studenti.polito.it">pietro</maintainer>
   <license>Apache-2.0</license>
 

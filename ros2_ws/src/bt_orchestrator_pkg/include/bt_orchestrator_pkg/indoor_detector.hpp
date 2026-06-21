@@ -1,85 +1,3 @@
-/**
- * ============================================================================
- *  indoor_detector.hpp  –  v3  (World-calibrated, Map-resilient)
- * ============================================================================
- *
- *  WHAT CHANGED FROM v2
- *  ─────────────────────
- *  v2 used a single Y-axis threshold in the odom frame.  That fails when:
- *    • the robot enters from a different direction (east/west/south doors)
- *    • the building has a non-rectangular entrance corridor
- *    • numerical drift in odom shifts the threshold hit point
- *
- *  v3 changes:
- *   1. FULL 2-D AXIS-ALIGNED BOUNDING BOX (AABB) geofence
- *        All four walls are checked simultaneously.  The robot must be
- *        inside the complete rectangular footprint to be INDOOR.
- *        Entry and exit use different (wider) boxes → Schmitt-trigger
- *        hysteresis.  No oscillation at the wall boundary.
- *
- *   2. PRE-CALIBRATED FOR indoor_outdoor.world
- *        Outer wall positions extracted directly from the world file
- *        <state> section (ground-truth runtime poses), wall thickness = 0.1500 m:
- *          WEST   inner face = -10.7814 m  (Wall_18 ctr=-10.8616, Wall_21 ctr=-10.8564)
- *          EAST   inner face = +11.1238 m  (Wall_13, Wall_25 ctr=+11.1988)
- *          SOUTH  inner face =  -4.0740 m  (Wall_22, Wall_24, Wall_27 ctr=-4.1490)
- *          NORTH  inner face =  +4.4669 m  (Wall_9 ctr=+4.5419, Wall_14/16 ctr=+4.5510)
- *        Interior cavity: 21.91 m (E-W) × 8.54 m (N-S)
- *        AABB (inner face + 0.20 m safety inset): X∈[-10.58, 10.92]  Y∈[-3.87, 4.27]
- *
- *   3. WORLD-FRAME AABB via /odom (no spawn offset)
- *        /odom is published by Gazebo's diff_drive plugin initialised at the
- *        robot's world-frame spawn pose, so odom == world frame directly.
- *        Config::spawn_world_x/y must be 0.0 (not the physical spawn coords).
- *        Previous versions incorrectly added (5.0, 6.5) which double-shifted
- *        the position: the robot appeared 6.5 m north of its true location,
- *        triggering false INDOOR when it was south of the building and missing
- *        INDOOR when it was actually inside.
- *
- *   4. MAP-AGNOSTIC FALLBACK
- *        Setting `use_geofence = false` disables the AABB and relies
- *        entirely on GPS quality scoring — the correct mode for unknown
- *        maps or real-hardware deployments where GPS actually degrades.
- *
- *   5. GPS VELOCITY vs ODOM VELOCITY mismatch score (new)
- *        Compares |v_gps − v_odom| as an additional indoor indicator.
- *        Works even when fix-status and covariance stay clean (Gazebo).
- *
- *   6. INSTANT AABB TRIGGER, debounced GPS path
- *        Geofence: state flips in the same callback tick (no debounce).
- *        GPS quality: still debounced for noise immunity on real hardware.
- *
- * ============================================================================
- *  HOW TO CALIBRATE FOR A NEW MAP
- *  ────────────────────────────────
- *  1. Open the .world file.  Find the <state> section.
- *  2. Identify the outermost wall links and note their X/Y positions.
- *  3. Compute AABB:
- *       x_min = minimum X of any outer EAST-or-WEST wall
- *       x_max = maximum X of any outer EAST-or-WEST wall
- *       y_min = minimum Y of any outer NORTH-or-SOUTH wall
- *       y_max = maximum Y of any outer NORTH-or-SOUTH wall
- *  4. Set Config fields:
- *       building_x_min_world = x_min + 0.35   (inset for wall thickness)
- *       building_x_max_world = x_max - 0.35
- *       building_y_min_world = y_min + 0.35
- *       building_y_max_world = y_max - 0.35
- *       spawn_world_x = 0.0   ← /odom is world frame; no offset needed
- *       spawn_world_y = 0.0   ← (Gazebo diff_drive initialises at world pose)
- *  5. Leave `wall_margin_m = 0.35` (covers wall thickness + tolerance).
- *  6. Leave `hysteresis_m = 0.50` (prevents boundary oscillation).
- * ============================================================================
- *
- *  SUBSCRIBED TOPICS
- *    /odom            nav_msgs/Odometry  robot position (geofence – primary)
- *    /gps/fix         NavSatFix          fix status + covariance (secondary)
- *    /odometry/gps    nav_msgs/Odometry  ENU position (jump + vel mismatch)
- *
- *  PUBLISHED TOPICS
- *    /bt/indoor_detection  std_msgs/String  live diagnostic
- * ============================================================================
- */
-
 #pragma once
 
 #include <atomic>
@@ -96,116 +14,64 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "std_msgs/msg/string.hpp"
 
-// ─────────────────────────────────────────────────────────────────────────────
-
 class IndoorDetector
 {
 public:
     enum class Environment { OUTDOOR, INDOOR };
 
-    // =========================================================================
-    //  CONFIGURATION
-    // =========================================================================
     struct Config
     {
-        // ── GEOFENCE 2D AABB ─────────────────────────────────────────────────
+        // 2D AABB geofence (world frame, derived from indoor_outdoor.world wall poses)
         bool   use_geofence        = true;
 
-        // Building outer boundary in WORLD frame [m]
-        // Derived from indoor_outdoor.world <state> section — all wall thicknesses = 0.1500 m.
+        // Geofence source is /odom, NOT /odometry/global. GPS multipath bias varies
+        // run-to-run (up to 0.44 m), causing premature geofence fire. /odom drift
+        // is <0.2 m per 100 m — accurate enough for the binary inside/outside decision.
         //
-        //  Wall centres (world frame):
-        //    WEST:  Wall_18 x=-10.8616, Wall_21 x=-10.8564
-        //    EAST:  Wall_13 x=+11.1988, Wall_25 x=+11.1988
-        //    SOUTH: Wall_22 y=-4.1490,  Wall_24 y=-4.1490,  Wall_27 y=-4.1490
-        //    NORTH: Wall_9  y=+4.5419,  Wall_14 y=+4.5510,  Wall_16 y=+4.5510
-        //
-        //  Exact inner faces (centre ± half-thickness 0.075 m):
-        //    west_inner  = -10.7814 m     east_inner  = +11.1238 m
-        //    south_inner =  -4.0740 m     north_inner =  +4.4669 m
-        //    Interior cavity: 21.9052 m (E-W) × 8.5409 m (N-S)
-        //
-        //  AABB derived from SDF world file exact wall face parsing:
-        //    South inner face: y = -4.074  (Wall_22/27/24)
-        //    North inner face: y = +4.467  (Wall_9/14/16)
-        //    West  inner face: x = -10.781 (Wall_18/21)
-        //    East  inner face: x = +11.124 (Wall_13/25)
-        //
-        // GEOFENCE SOURCE: /odom (reverted from /odometry/global).
-        //
-        // Why /odom and NOT /odometry/global for the GEOFENCE:
-        //   /odom (wheel encoder dead-reckoning) has consistent drift ~0.2m/100m
-        //   — small and predictable. It accurately tracks the robot's PHYSICAL
-        //   position relative to its start.
-        //
-        //   /odometry/global (GPS+IMU EKF) has GPS multipath bias that varies
-        //   run-to-run: measured 0.057m in run 1 but 0.439m in run 2.
-        //   In run 2, the Δy=+0.343m bias made /odometry/global think the robot
-        //   was 0.343m NORTH of its physical position. The GEOFENCE fired at
-        //   t+554s when global y=-3.925 looked inside the box, but /odom said
-        //   y=-4.295 — the robot was still OUTSIDE the building physically.
-        //   GPS was disabled, EKF dead-reckoned from the wrong starting point,
-        //   and the robot drove into the south wall.
-        //
-        //   For a binary inside/outside gate decision, physical accuracy
-        //   matters more than GPS-corrected accuracy. /odom wins here.
-        //
-        // South boundary set to -4.00 (was -3.97):
-        //   Physical south wall inner face = -4.074m.
-        //   At /odom y=-4.00 the robot is 0.074m inside the physical wall.
-        //   /odom drift at building entry is typically <0.25m after 100-200m
-        //   outdoor travel → robot is truly inside when geofence fires.
-        //   Extra 0.03m margin vs previous -3.97 absorbs /odom drift
-        //   without risking premature GPS-disable outside the building.
-        double building_x_min_world = -10.68;  // west:  -10.781 + 0.10
-        double building_x_max_world = +11.02;  // east:  +11.124 - 0.10
-        double building_y_min_world =  -4.00;  // south: -4.074 + 0.07 (REVERTED+TIGHTENED)
-        double building_y_max_world =  +4.37;  // north: +4.467 - 0.10
+        // Inner faces:  west=-10.781  east=+11.124  south=-4.074  north=+4.467
+        // South boundary -4.00 (vs inner face -4.074): 0.074 m inside the wall.
+        // /odom drift at building entry is typically <0.25 m → robot is truly
+        // inside when geofence fires, with margin against premature outdoor fire.
+        double building_x_min_world = -10.68;
+        double building_x_max_world = +11.02;
+        double building_y_min_world =  -4.00;
+        double building_y_max_world =  +4.37;
 
-        // Geofence uses /odom — spawn offset = 0.0 since /odom already
-        // starts at world spawn position (5.0, 6.5) from Gazebo diff_drive.
+        // spawn_world_x/y = 0.0: /odom is initialised at world spawn pose by
+        // Gazebo's diff_drive plugin, so odom == world frame directly.
         double spawn_world_x       = 0.0;
         double spawn_world_y       = 0.0;
 
         double hysteresis_m        = 0.20;
 
-        // ── GPS QUALITY SCORING (secondary path / real hardware) ─────────────
-        // Covariance [m²] – guard removed; always evaluated (fixes Gazebo bug)
-        double cov_warn_m2         =   4.0;   //  2 m std  → +1
-        double cov_bad_m2          =  25.0;   //  5 m std  → +2
-        double cov_critical_m2     = 100.0;   // 10 m std  → +3
+        // GPS quality scoring (secondary path / real hardware)
+        double cov_warn_m2         =   4.0;
+        double cov_bad_m2          =  25.0;
+        double cov_critical_m2     = 100.0;
 
-        // Position jump in GPS ENU between consecutive messages [m]
-        double jump_minor_m        =  0.5;    // +1
-        double jump_moderate_m     =  2.0;    // +2
-        double jump_severe_m       =  5.0;    // +3
+        double jump_minor_m        =  0.5;
+        double jump_moderate_m     =  2.0;
+        double jump_severe_m       =  5.0;
 
-        // GPS ENU velocity vs /odom velocity mismatch [m/s]  (new in v3)
         bool   use_vel_mismatch    = true;
-        double vel_mismatch_warn   =  0.20;   // +1
-        double vel_mismatch_bad    =  0.50;   // +2
+        double vel_mismatch_warn   =  0.20;
+        double vel_mismatch_bad    =  0.50;
 
-        // GPS position vs odometry position divergence [m]
         bool   use_pos_div         = true;
-        double pos_div_warn_m      =  1.0;    // +1
-        double pos_div_bad_m       =  3.0;    // +2
+        double pos_div_warn_m      =  1.0;
+        double pos_div_bad_m       =  3.0;
 
-        // GPS timeout [s]: no NavSatFix received → bad tick
         double signal_timeout_s    = 2.0;
 
-        // Scoring thresholds
-        int    score_indoor_thr    = 3;    // bad tick when score ≥ this
-        int    score_critical_thr  = 7;    // instant flip (no debounce)
+        int    score_indoor_thr    = 3;
+        int    score_critical_thr  = 7;
 
-        // Debounce (GPS path only; geofence path is always instant)
-        int    debounce_in_ticks   = 2;    // consecutive bad  → INDOOR
-        int    debounce_out_ticks  = 4;    // consecutive good → OUTDOOR
+        int    debounce_in_ticks   = 2;
+        int    debounce_out_ticks  = 4;
 
-        // Diagnostic publish period [s]
         double diag_period_s       = 0.5;
     };
 
-    // =========================================================================
     IndoorDetector(rclcpp::Node*                      node,
                    std::shared_ptr<std::atomic<bool>> indoor_flag,
                    const Config&                      cfg)
@@ -257,12 +123,8 @@ public:
             indoor ? "INDOOR" : "OUTDOOR");
     }
 
-    // =========================================================================
 private:
 
-    // ── Geometry helper ───────────────────────────────────────────────────────
-
-    /** True when (px, py) is strictly inside the axis-aligned box. */
     static bool in_box(double px, double py,
                        double x_min, double x_max,
                        double y_min, double y_max)
@@ -271,32 +133,14 @@ private:
                py > y_min && py < y_max;
     }
 
-    // ── Geofence check (called from on_odom at ~50 Hz) ────────────────────────
-    /**
-     * Schmitt-trigger hysteresis:
-     *
-     *   INDOOR  entry : robot inside INNER box  (AABB inset by 0)
-     *   OUTDOOR entry : robot outside OUTER box (AABB expanded by hysteresis_m)
-     *
-     *   The band between INNER and OUTER keeps the state stable while the
-     *   robot is near the wall (passing through the door, etc.)
-     *
-     *      ┌─ outer box (AABB + hysteresis) ────────────────────────────┐
-     *      │                                                             │
-     *      │   ┌─ inner box (AABB) ──────────────────────────────┐      │
-     *      │   │                    INDOOR                       │      │
-     *      │   │         (state flips IN here)                   │      │
-     *      │   └─────────────────────────────────────────────────┘      │
-     *      │                   hysteresis band                           │
-     *      └─────────────────────────────────────────────────────────────┘
-     *      OUTDOOR (state flips OUT only when robot leaves outer box)
-     */
+    // Schmitt-trigger hysteresis: INDOOR when robot enters inner AABB;
+    // OUTDOOR only when robot exits outer AABB (inner + hysteresis_m).
+    // The band prevents oscillation while the robot passes through the door.
     void check_geofence(double world_x, double world_y)
     {
         Environment cur = env_.load();
 
         if (cur == Environment::OUTDOOR) {
-            // INDOOR entry: strictly inside the calibrated AABB
             bool enters = in_box(world_x, world_y,
                                  cfg_.building_x_min_world,
                                  cfg_.building_x_max_world,
@@ -305,14 +149,10 @@ private:
             if (enters) {
                 RCLCPP_WARN(node_->get_logger(),
                     "[IndoorDetector] ■ GEOFENCE ENTRY → INDOOR  "
-                    "world=(%.2f, %.2f)  box=[%.2f..%.2f, %.2f..%.2f]",
-                    world_x, world_y,
-                    cfg_.building_x_min_world, cfg_.building_x_max_world,
-                    cfg_.building_y_min_world, cfg_.building_y_max_world);
+                    "world=(%.2f, %.2f)", world_x, world_y);
                 flip_to(Environment::INDOOR);
             }
         } else {
-            // OUTDOOR entry: must leave the outer (expanded) box
             double h = cfg_.hysteresis_m;
             bool exits = !in_box(world_x, world_y,
                                  cfg_.building_x_min_world - h,
@@ -322,46 +162,34 @@ private:
             if (exits) {
                 RCLCPP_INFO(node_->get_logger(),
                     "[IndoorDetector] ● GEOFENCE EXIT → OUTDOOR  "
-                    "world=(%.2f, %.2f)  "
-                    "exit_box=[%.2f..%.2f, %.2f..%.2f]",
-                    world_x, world_y,
-                    cfg_.building_x_min_world - h,
-                    cfg_.building_x_max_world + h,
-                    cfg_.building_y_min_world - h,
-                    cfg_.building_y_max_world + h);
+                    "world=(%.2f, %.2f)", world_x, world_y);
                 flip_to(Environment::OUTDOOR);
             }
         }
     }
 
-    // ── GPS quality score ─────────────────────────────────────────────────────
     int compute_gps_score(const sensor_msgs::msg::NavSatFix::ConstSharedPtr& msg,
                           double jump_m, double div_m, double vel_mis)
     {
         int s = 0;
 
-        // 1. Fix status
         if (msg->status.status < sensor_msgs::msg::NavSatStatus::STATUS_FIX)
             s += 5;
 
-        // 2. Covariance – evaluated regardless of covariance_type (Gazebo fix)
         double cov = msg->position_covariance[0];
         if      (cov >= cfg_.cov_critical_m2) s += 3;
         else if (cov >= cfg_.cov_bad_m2)      s += 2;
         else if (cov >= cfg_.cov_warn_m2)     s += 1;
 
-        // 3. GPS position jump (multipath signature)
         if      (jump_m >= cfg_.jump_severe_m)   s += 3;
         else if (jump_m >= cfg_.jump_moderate_m) s += 2;
         else if (jump_m >= cfg_.jump_minor_m)    s += 1;
 
-        // 4. GPS ENU position vs /odom divergence
         if (cfg_.use_pos_div) {
             if      (div_m >= cfg_.pos_div_bad_m)  s += 2;
             else if (div_m >= cfg_.pos_div_warn_m) s += 1;
         }
 
-        // 5. GPS velocity vs odom velocity mismatch  (new in v3)
         if (cfg_.use_vel_mismatch) {
             if      (vel_mis >= cfg_.vel_mismatch_bad)  s += 2;
             else if (vel_mis >= cfg_.vel_mismatch_warn) s += 1;
@@ -370,25 +198,6 @@ private:
         return s;
     }
 
-    // ── Debounced GPS state machine ───────────────────────────────────────────
-    // ── Debounced GPS state machine ───────────────────────────────────────────
-    //
-    // OUTDOOR → INDOOR : critical score OR consec_bad_ >= debounce_in_ticks.
-    //                    No geofence interaction — GPS can always force INDOOR.
-    //
-    // INDOOR → OUTDOOR : consec_good_ >= debounce_out_ticks AND geofence agrees.
-    //
-    //   GEOFENCE VETO (the fix for rapid oscillation):
-    //   When use_geofence=true, GPS-score is NOT allowed to declare OUTDOOR
-    //   while the robot is still inside the hysteresis-expanded AABB.
-    //   Without this veto the pattern was:
-    //     GPS: 4 good ticks → flip OUTDOOR (every ~0.8 s at 5 Hz)
-    //     Geofence /odom cb: robot still inside box → flip INDOOR immediately
-    //     → 1 Hz oscillation visible in log and bt_fused output
-    //   With the veto: GPS consec_good_ is reset, state stays INDOOR, no flip.
-    //   OUTDOOR is declared only when BOTH signals agree (robot has left the box).
-    //
-    // Called under mtx_ from on_fix() and evaluate_timeout().
     void update_gps_state(bool bad_tick, bool critical)
     {
         Environment cur = env_.load();
@@ -406,13 +215,9 @@ private:
             }
         } else {
             if (consec_good_ >= cfg_.debounce_out_ticks) {
-
-                // ── GEOFENCE VETO ────────────────────────────────────────────
-                // If the geofence is enabled and the robot is still physically
-                // inside the building (outer AABB incl. hysteresis band),
-                // GPS-score is not allowed to flip to OUTDOOR.
-                // Reset consec_good_ so the counter must re-accumulate,
-                // preventing a constant stream of vetoed transitions.
+                // Geofence veto: GPS score alone cannot declare OUTDOOR while the
+                // robot is still physically inside the building. Without this veto
+                // the GPS path and geofence path oscillate at ~1 Hz near the door.
                 if (cfg_.use_geofence && has_odom_) {
                     double wx = odom_x_ + cfg_.spawn_world_x;
                     double wy = odom_y_ + cfg_.spawn_world_y;
@@ -425,23 +230,21 @@ private:
                     if (still_inside) {
                         RCLCPP_INFO_THROTTLE(node_->get_logger(),
                             *node_->get_clock(), 5000,
-                            "[IndoorDetector] GPS-score OUTDOOR vetoed by geofence"
-                            "  world=(%.2f, %.2f)  good_ticks=%d",
+                            "[IndoorDetector] GPS OUTDOOR vetoed by geofence  "
+                            "world=(%.2f, %.2f)  good_ticks=%d",
                             wx, wy, consec_good_);
-                        consec_good_ = 0;   // must re-accumulate
+                        consec_good_ = 0;
                         return;
                     }
                 }
-                // ── Both paths agree: flip to OUTDOOR ────────────────────────
                 RCLCPP_INFO(node_->get_logger(),
-                    "[IndoorDetector] ● GPS-score → OUTDOOR  "
-                    "good_ticks=%d", consec_good_);
+                    "[IndoorDetector] ● GPS-score → OUTDOOR  good_ticks=%d",
+                    consec_good_);
                 flip_to(Environment::OUTDOOR);
             }
         }
     }
 
-    // ── Atomic state flip ─────────────────────────────────────────────────────
     void flip_to(Environment next)
     {
         env_.store(next);
@@ -450,43 +253,22 @@ private:
         consec_good_ = 0;
     }
 
-    // =========================================================================
-    //  SUBSCRIBER CALLBACKS
-    // =========================================================================
-
-    /** /odom — PRIMARY geofence source (wheel encoder dead-reckoning, world frame)
-     *
-     * REVERTED from /odometry/global back to /odom.
-     * Reason: /odometry/global GPS multipath bias varies run-to-run (up to 0.44m),
-     * causing premature GEOFENCE fire when GPS bias was northward — robot was
-     * physically outside the building when GPS was disabled, baking a 0.37m
-     * northward error into indoor dead-reckoning and driving the robot into
-     * the south wall. /odom drift is <0.2m per 100m (consistent, predictable)
-     * and accurately reflects physical position for the geofence gate decision.
-     *
-     * Rate: ~50 Hz (Gazebo diff_drive plugin).
-     */
     void on_odom(nav_msgs::msg::Odometry::ConstSharedPtr msg)
     {
         std::lock_guard<std::mutex> lk(mtx_);
 
         odom_x_   = msg->pose.pose.position.x;
         odom_y_   = msg->pose.pose.position.y;
-        odom_vx_  = msg->twist.twist.linear.x;   // forward speed (base_link)
+        odom_vx_  = msg->twist.twist.linear.x;
         has_odom_ = true;
 
         if (!cfg_.use_geofence) return;
 
-        // /odom is initialised at the robot's world-frame spawn pose by Gazebo's
-        // diff_drive plugin, so odom (x, y) == world (x, y) directly.
-        // cfg_.spawn_world_x/y are kept as 0.0 (no offset needed).
-        double wx = odom_x_ + cfg_.spawn_world_x;   // = odom_x  (spawn = 0)
-        double wy = odom_y_ + cfg_.spawn_world_y;   // = odom_y  (spawn = 0)
-
+        double wx = odom_x_ + cfg_.spawn_world_x;
+        double wy = odom_y_ + cfg_.spawn_world_y;
         check_geofence(wx, wy);
     }
 
-    /** /gps/fix  –  GPS quality scoring (secondary / real-hardware path) */
     void on_fix(sensor_msgs::msg::NavSatFix::ConstSharedPtr msg)
     {
         std::lock_guard<std::mutex> lk(mtx_);
@@ -496,7 +278,6 @@ private:
         last_fix_status_ = msg->status.status;
         last_cov_        = msg->position_covariance[0];
 
-        // Position divergence: GPS ENU vs odom (both in map frame)
         double div_m = 0.0;
         if (has_odom_ && has_gps_enu_) {
             double dx = gps_enu_x_ - odom_x_;
@@ -505,25 +286,23 @@ private:
         }
         last_div_m_ = div_m;
 
-        // Velocity mismatch: GPS ENU speed vs /odom forward speed
         double vel_mis = 0.0;
         if (cfg_.use_vel_mismatch && has_odom_ && has_gps_enu_) {
             double v_gps  = std::sqrt(gps_enu_vx_*gps_enu_vx_ +
                                       gps_enu_vy_*gps_enu_vy_);
-            double v_odom = std::abs(odom_vx_);   // TurtleBot3: forward = x
+            double v_odom = std::abs(odom_vx_);
             vel_mis = std::abs(v_gps - v_odom);
         }
         last_vel_mis_ = vel_mis;
 
         last_score_ = compute_gps_score(msg, last_jump_m_, div_m, vel_mis);
-        last_jump_m_ = 0.0;   // consume after scoring
+        last_jump_m_ = 0.0;
 
         bool bad      = (last_score_ >= cfg_.score_indoor_thr);
         bool critical = (last_score_ >= cfg_.score_critical_thr);
         update_gps_state(bad, critical);
     }
 
-    /** /odometry/gps  –  GPS ENU position (jump + divergence + velocity) */
     void on_gps_odom(nav_msgs::msg::Odometry::ConstSharedPtr msg)
     {
         std::lock_guard<std::mutex> lk(mtx_);
@@ -533,7 +312,6 @@ private:
         double vx = msg->twist.twist.linear.x;
         double vy = msg->twist.twist.linear.y;
 
-        // Position jump detection
         if (has_prev_gps_) {
             double dx = x - prev_gps_x_;
             double dy = y - prev_gps_y_;
@@ -548,12 +326,11 @@ private:
         has_gps_enu_ = true;
     }
 
-    // ── GPS timeout (evaluated once per diag timer tick) ──────────────────────
     void evaluate_timeout()
     {
         std::lock_guard<std::mutex> lk(mtx_);
 
-        if (last_gps_stamp_.nanoseconds() == 0) return;   // never received
+        if (last_gps_stamp_.nanoseconds() == 0) return;
 
         double age = (node_->now() - last_gps_stamp_).seconds();
         if (age > cfg_.signal_timeout_s && !gps_timed_out_) {
@@ -567,7 +344,6 @@ private:
         }
     }
 
-    // ── Diagnostics ───────────────────────────────────────────────────────────
     void publish_diagnostics()
     {
         double wx, wy, div_m, vel_mis, jump_m, age_s, cov;
@@ -590,7 +366,6 @@ private:
         }
         env = env_.load();
 
-        // Geofence proximity: distance to nearest wall edge
         double dist_N = cfg_.building_y_max_world - wy;
         double dist_S = wy - cfg_.building_y_min_world;
         double dist_E = cfg_.building_x_max_world - wx;
@@ -623,55 +398,43 @@ private:
     void log_startup()
     {
         RCLCPP_INFO(node_->get_logger(),
-            "\n[IndoorDetector v3]\n"
+            "\n[IndoorDetector]\n"
             "  Mode     : %s\n"
             "  Building : X∈[%.3f, %.3f]  Y∈[%.3f, %.3f]  (world frame)\n"
-            "  Width    : %.2f m   Depth: %.2f m\n"
-            "  Spawn    : world (%.1f, %.1f)\n"
             "  Hysteresis: %.2f m\n"
-            "  Debounce : in=%d  out=%d  (GPS path only; geofence = instant)\n"
+            "  Debounce : in=%d  out=%d  (GPS path; geofence = instant)\n"
             "  Topics   : /odom  /gps/fix  /odometry/gps",
             cfg_.use_geofence ? "GEOFENCE+GPS_score" : "GPS_score only",
             cfg_.building_x_min_world, cfg_.building_x_max_world,
             cfg_.building_y_min_world, cfg_.building_y_max_world,
-            cfg_.building_x_max_world - cfg_.building_x_min_world,
-            cfg_.building_y_max_world - cfg_.building_y_min_world,
-            cfg_.spawn_world_x, cfg_.spawn_world_y,
             cfg_.hysteresis_m,
             cfg_.debounce_in_ticks, cfg_.debounce_out_ticks);
     }
 
-    // ── Members ───────────────────────────────────────────────────────────────
     rclcpp::Node*                       node_;
     std::shared_ptr<std::atomic<bool>>  flag_;
     Config                              cfg_;
     std::atomic<Environment>            env_;
     std::mutex                          mtx_;
 
-    // Debounce counters (GPS path)
     int   consec_bad_, consec_good_;
 
-    // GPS timeout
     rclcpp::Time  last_gps_stamp_;
     bool          gps_timed_out_;
 
-    // /odom state
     bool   has_odom_;
     double odom_x_, odom_y_, odom_vx_{0.0};
 
-    // /odometry/gps state
     bool   has_gps_enu_;
     double gps_enu_x_, gps_enu_y_;
     double gps_enu_vx_, gps_enu_vy_;
     bool   has_prev_gps_;
     double prev_gps_x_, prev_gps_y_;
 
-    // Diagnostics cache
     double last_jump_m_, last_div_m_, last_vel_mis_;
     int    last_score_, last_fix_status_;
     double last_cov_;
 
-    // ROS2 handles
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr      sub_odom_;
     rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr  sub_fix_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr      sub_gps_odom_;

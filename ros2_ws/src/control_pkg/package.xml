@@ -2,7 +2,14 @@
 <package format="3">
   <name>control_pkg</name>
   <version>0.0.1</version>
-  <description>Control signal nodes c1 and c2 for mobile robot trajectory generation</description>
+  <description>
+    Waypoint-following trajectory controller for TurtleBot3 Burger.
+    Reads target waypoints from a YAML config, subscribes to /odometry/bt_fused
+    (outdoor) or /odom (indoor), and publishes velocity commands to /cmd_vel.
+    Implements always-forward pursuit law, door guard logic, jump filtering,
+    and two-phase stuck recovery (backup + rotate).
+  </description>
+  <maintainer email="yousefhesham.yh112@gmail.com">YousefAbdelhady</maintainer>
   <maintainer email="360671@studenti.polito.it">Lorenzo_Montineri</maintainer>
   <license>MIT</license>
   <build_depend>ament_python</build_depend>

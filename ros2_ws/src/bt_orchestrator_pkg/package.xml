@@ -5,12 +5,13 @@
   <name>bt_orchestrator_pkg</name>
   <version>1.0.0</version>
   <description>
-    Behavior Tree orchestrator for GPS/INS/Odometer sensor fusion.
-    Implements the dual-branch (GPS / No-GPS) localization strategy from
-    the paper "Information Fusion of GPS, INS and Odometer Sensors".
-    Publishes the authoritative fused position on /odometry/bt_fused.
+    Behavior Tree orchestrator for GPS/INS/Odometer sensor fusion on TurtleBot3 Burger.
+    Implements a 10 Hz reactive dual-branch strategy: GPS branch uses a fixed-weight
+    complementary filter (KF1+KF2, alpha=0.5 each); No-GPS branch uses a Fuzzy Logic
+    System to compute adaptive weights for ANN+KF2 fusion. Publishes the authoritative
+    fused position on /odometry/bt_fused and exposes the tree to Groot2 on port 1667.
   </description>
-  <maintainer email="yousef_hesham.yh112@icloud.com">yousefabdelhady</maintainer>
+  <maintainer email="yousefhesham.yh112@gmail.com">YousefAbdelhady</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

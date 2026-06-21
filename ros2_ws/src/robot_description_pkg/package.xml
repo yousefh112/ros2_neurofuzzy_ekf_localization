@@ -7,7 +7,7 @@
     Provides the URDF/Xacro model, Gazebo sensor plugins (IMU, GPS,
     differential drive), a custom indoor/outdoor simulation world, and launch
     files for spawning the robot in Gazebo Classic.</description>
-  <maintainer email="yousef_hesham.yh112@icloud.com">yousefabdelhady</maintainer>
+  <maintainer email="yousefhesham.yh112@gmail.com">YousefAbdelhady</maintainer>
   <license>Apache-2.0</license>
 
   <depend>rclpy</depend>

@@ -1,26 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ╔══════════════════════════════════════════════════════════════════════════╗
-  ║  Behavior Tree: GPS / INS / Odometer Information Fusion                 ║
-  ║  Paper: "Information Fusion of GPS, INS and Odometer Sensors"           ║
-  ║  Robot: TurtleBot3 Burger (Gazebo / Real)                               ║
-  ║                                                                          ║
-  ║  ROS2 Topics consumed by this BT:                                        ║
-  ║    /gps/fix               ← GPS NavSatFix (availability check)           ║
-  ║    /imu/data              ← IMU (accel + angular velocity)               ║
-  ║    /odom                  ← Wheel Odometry                               ║
-  ║    /odometry/gps          ← GPS converted to ENU by navsat_transform     ║
-  ║    /odometry/global       ← KF1 output  (GPS + IMU EKF)                 ║
-  ║    /odometry/global2      ← KF2 output  (GPS + Odom EKF)                ║
-  ║    /ann/trajectory        ← ANN position estimate (from robot_brain)     ║
-  ║                                                                          ║
-  ║  ROS2 Topics published by this BT:                                       ║
-  ║    /odometry/bt_fused     ← BT-authoritative final position estimate     ║
-  ║    /bt/fuzzy_weights      ← Diagnostic: adaptive α1, α2 from FL         ║
-  ║    /bt/status             ← Diagnostic: current active branch            ║
-  ╚══════════════════════════════════════════════════════════════════════════╝
+  Behavior Tree: GPS / INS / Odometer Information Fusion
+  Robot: TurtleBot3 Burger (Gazebo / Real)
 
-  TREE LOGIC (mirrors Fig.1 flowchart exactly):
+  Topics consumed:
+    /gps/fix               ← GPS NavSatFix (availability check)
+    /imu/data              ← IMU (accel + angular velocity)
+    /odom                  ← Wheel Odometry
+    /odometry/gps          ← GPS converted to ENU by navsat_transform
+    /odometry/global       ← KF1 output  (GPS + IMU EKF)
+    /odometry/global2      ← KF2 output  (GPS + Odom EKF)
+    /ann/trajectory        ← ANN position estimate (from robot_brain)
+
+  Topics published:
+    /odometry/bt_fused     ← BT-authoritative final position estimate
+    /bt/fuzzy_weights      ← Diagnostic: adaptive α1, α2 from FL
+    /bt/status             ← Diagnostic: current active branch
+
+  TREE LOGIC:
 
   Every tick (10 Hz):
     1. Guard: All sensors (IMU, Odom) must be publishing → else skip tick
@@ -52,25 +49,14 @@
   <BehaviorTree ID="MainTree">
     <Sequence name="Main_Orchestrator">
 
-      <!-- ═══════════════════════════════════════════════════════════════ -->
-      <!-- PHASE 0 — SENSOR READINESS GUARD                              -->
-      <!-- Blocks the BT until IMU and odometry are both publishing.     -->
-      <!-- After startup this always passes in < 1 tick.                 -->
-      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <!-- PHASE 0: block until IMU and odometry are both publishing -->
       <Condition ID="CheckSensorsReady" name="CheckSensorsReady"/>
 
-      <!-- ═══════════════════════════════════════════════════════════════ -->
-      <!-- PHASE 1 — REACTIVE LOCALIZATION STRATEGY                      -->
-      <!-- ReactiveFallback: re-checks GPS on every tick.                -->
-      <!-- If GPS recovers mid-flight, Branch A resumes immediately.     -->
-      <!-- ═══════════════════════════════════════════════════════════════ -->
+      <!-- PHASE 1: ReactiveFallback re-checks GPS each tick;
+           if GPS recovers mid-flight, Branch A resumes immediately -->
       <ReactiveFallback name="Localization_Strategy">
 
-        <!-- ─────────────────────────────────────────────────────────── -->
-        <!-- BRANCH A: GPS AVAILABLE                                     -->
-        <!-- All nodes run synchronously in the same tick.               -->
-        <!-- Matches left column of Fig.1 flowchart.                     -->
-        <!-- ─────────────────────────────────────────────────────────── -->
+        <!-- Branch A: GPS Available -->
         <Sequence name="GPS_Available_Branch">
 
           <!-- Gate: GPS fix must be valid AND fresh (≤2 s old) -->
@@ -86,10 +72,8 @@
           <!-- Confirm KF2 (ekf_filter_node_gps_enc) is live           -->
           <Action ID="EnsureKF2Active"             name="EnsureKF2Active"/>
 
-          <!-- Fixed-weight Complementary Filter (paper §3.2):
-               P1 = [kf1_x, kf1_y]  (KF1 position estimate)
-               P2 = [kf2_x, kf2_y]  (KF2 position estimate)
-               x_final = α1*P1.x + α2*P2.x   α1 = α2 = 0.5          -->
+          <!-- Fixed-weight Complementary Filter:
+               x_final = α1*KF1.x + α2*KF2.x   α1 = α2 = 0.5          -->
           <Action ID="RunComplementaryFilter_GPS"  name="RunComplementaryFilter_GPS"/>
 
           <!-- Publish [x_final, y_final] → /odometry/bt_fused         -->
@@ -101,11 +85,7 @@
 
         </Sequence>
 
-        <!-- ─────────────────────────────────────────────────────────── -->
-        <!-- BRANCH B: GPS UNAVAILABLE                                   -->
-        <!-- Activated when CheckGpsSignal returns FAILURE.             -->
-        <!-- Matches right column of Fig.1 flowchart.                   -->
-        <!-- ─────────────────────────────────────────────────────────── -->
+        <!-- Branch B: GPS Unavailable (activated when CheckGpsSignal returns FAILURE) -->
         <Sequence name="GPS_Unavailable_Branch">
 
           <!-- StopKF1 + Update KF2 with last known GPS position        -->
@@ -146,9 +126,7 @@
     </Sequence>
   </BehaviorTree>
 
-  <!-- ═══════════════════════════════════════════════════════════════════ -->
-  <!-- NODE MODEL REGISTRY (for Groot2 visualization)                    -->
-  <!-- ═══════════════════════════════════════════════════════════════════ -->
+  <!-- Node model registry for Groot2 visualization -->
   <TreeNodesModel>
 
     <!-- Conditions -->

@@ -1,23 +1,11 @@
 # Trajectory Controller — Waypoints Configuration
 #
-# ================================================================
-# SESSION 15 — CARDINAL-ONLY INDOOR NAVIGATION CONSTRAINT
-# ================================================================
-# All waypoint transitions within indoor zones (SW, SC, SE, NW, NC, NE)
-# must enforce STRICTLY CARDINAL (90°) movements:
-#   • N-S movements: Δx = 0, Δy ≠ 0
-#   • E-W movements: Δy = 0, Δx ≠ 0
-#   • NO diagonal transitions: both Δx and Δy simultaneously non-zero
+# All indoor waypoint transitions use cardinal-only (90°) movements.
+# Diagonal transitions increase heading uncertainty during GPS-denied phases
+# and produce more varied ANN training trajectories.
 #
-# Rationale: Reduces heading error uncertainty during GPS-denied phases;
-# simplifies ANN training (fewer trajectory patterns) and improves indoor
-# localization reliability when relying on momentum + orientation history.
-#
-# Passes 1, 2, 3 audited (S15): WP77-79 only non-cardinal entry,
-# now fixed to cardinal-only path in NC room (WP78: pure N; WP79: pure S).
 # ================================================================
-# ================================================================
-# BUILDING GEOMETRY (verified from SDF — Session 7 naming correction)
+# BUILDING GEOMETRY
 # ================================================================
 # 6 rooms: 3 south (below E-W divider walls) + 3 north (above E-W divider walls)
 #
@@ -72,68 +60,34 @@
 #   Fix: approach Door B2 perpendicularly, x=4.705 going north (↕).
 #
 # ================================================================
-# DOOR CROSSING RULES — APPROACH PROTOCOL  (F3 FIX — Session 9):
-#   N-S walls (A, B, C1, C2): approach east-west AT the door's y_center
-#   E-W walls (A2, B2):       approach north-south AT the door's x_center
-#   All crossings must be perpendicular — no diagonal approaches.
+# DOOR CROSSING PROTOCOL
+# ================================================================
+# Every door crossing has three waypoints:
+#   1. PRE-APPROACH  : same side, 0.50m from wall, at door center
+#   2. DOOR          : the wall crossing point
+#   3. POST-CROSS    : opposite side, 0.50m from wall, at door center
 #
-#   APPROACH WAYPOINTS (new in Session 9):
-#   Every door crossing now has THREE waypoints:
-#     1. PRE-APPROACH  : same side, 0.50m from wall, at door center
-#     2. DOOR          : the wall crossing point (unchanged)
-#     3. POST-CROSS    : opposite side, 0.50m from wall, at door center
+# This ensures the robot aligns with the door center BEFORE reaching
+# the wall, tolerating indoor localization errors up to ~0.45m.
 #
-#   This eliminates the Door-B crash (Session 8, run 4):
-#   Robot drifted to y=−3.94 (0.51m south of door y_c=−3.43) due to
-#   ANN indoor error (mean 7.62m). With pre-approach at (4.35,−3.43),
-#   the controller must bring the robot to y≈−3.43 BEFORE reaching
-#   the wall, regardless of localization error magnitude.
-#
-#   Approach offsets used:
-#     Door A  (x_wall=−3.501): east pre =−3.00, west post=−4.00
-#     Door B  (x_wall=+3.849): west pre =+3.35, east post=+4.35
-#     Door A2 (y_wall=+0.211): south pre=−0.30, north post=+0.70
-#     Door B2 (y_wall=+0.201): south pre=−0.30, north post=+0.70
-#     Door C2 (x_wall=−3.510): east pre =−3.01, west post=−4.01
+# Offsets used:
+#   Door A  (x_wall=−3.501): east pre=−3.00, west post=−4.00
+#   Door B  (x_wall=+3.849): west pre=+3.35, east post=+4.35
+#   Door A2 (y_wall=+0.211): south pre=−0.30, north post=+0.70
+#   Door B2 (y_wall=+0.201): south pre=−0.30, north post=+0.70
+#   Door C2 (x_wall=−3.510): east pre=−3.01, west post=−4.01
 #
 # ================================================================
-# SESSION 14 FIX — SOUTH ENTRY x-SHIFT + NORTH CLEARANCE WPs
+# SOUTH ENTRY x=0.16 RATIONALE
 # ================================================================
-# ROOT CAUSE (confirmed from bag 1_0.db3, Session 14):
-#   GPS ENU frame has systematic x-offset from /odom: dx = -0.441 ± 0.151m
-#   (map_x = odom_x + dx_gps, dx_gps is always negative in this setup).
+# GPS ENU frame has a systematic x-offset from /odom: dx = −0.441 ± 0.151m
+# (map_x = odom_x + dx_gps). South entry waypoints use map x=0.16 so that
+# the robot crosses in /odom at x≈+0.16 (door center), with safe margins
+# across the full ±2σ GPS offset range.
 #
-#   Old south-entry WPs at map x=0.16 placed the robot at:
-#     odom_x = 0.16 - dx_gps = 0.16 + 0.441 = 0.601m (mean)
-#     odom_x worst case (dx=-0.743): 0.16 + 0.743 = 0.903m → wall crash
-#   Door gap east edge is at odom x=+0.858m.
-#   After WP13 capture, controller turns toward Door B (east heading).
-#   Robot drifted east to odom x=0.877 → 0.124m wall penetration.
-#   GEOFENCE fired simultaneously → KF1 dead-reckons → oscillation → stuck.
-#
-#   FIX 1: shift all south entry/exit WPs to map x=-0.28.
-#     odom_x = -0.28 + 0.441 = +0.161m (mean = door center)
-#     Safe for ALL GPS offset scenarios ±2σ:
-#       dx=-0.139 (mean+2σ): odom x=-0.141m  east_margin=0.999m ✓
-#       dx=-0.441 (mean):    odom x=+0.161m  east_margin=0.697m ✓
-#       dx=-0.285 (S14 run): odom x=+0.005m  east_margin=0.853m ✓
-#       dx=-0.743 (mean-2σ): odom x=+0.463m  east_margin=0.395m ✓
-#
-#   FIX 2: insert NORTH CLEARANCE WP (-0.28, -3.00) after each entry
-#     post-cross WP, before the first interior navigation target.
-#     After GEOFENCE fires, controller turns NORTH (≈90-122° heading),
-#     driving robot away from south wall geometry before turning east/west
-#     toward Door B / Door A. Eliminates east jamb collision in all GPS
-#     offset scenarios.
-#
-#   WP30 (0.16, -3.45) is unchanged: it is an INTERIOR SC-room waypoint
-#   (transition between Door B return and Door A approach), NOT a south
-#   entry waypoint. GPS x-offset does not cause wall collision there.
-#
-#   Changes: 21 WPs shifted + 3 north-clearance WPs inserted = 131 total.
-# ================================================================
-#
-# VALIDATION: 131 waypoints, 0 wall crossing errors
+# NORTH CLEARANCE waypoints after each indoor entry drive the robot north
+# before turning east/west, avoiding collision with the south wall jambs
+# caused by the GPS x-offset during the initial geofence transition.
 # ================================================================
 
 trajectory_controller:
@@ -156,25 +110,21 @@ trajectory_controller:
 
       # ============================================================
       # SOUTH BUILDING APPROACH  (WP10–11)
-      # [S14] x=0.16 kept (door center in /odom; robust to ±GPS ENU dx):  odom x = -0.28 + |dx_gps| ≈ 0.16 (centered)
-      # GPS ENU dx_mean=-0.441±0.151m → robot crosses at odom x∈[-0.14, +0.46] — safe
       # ============================================================
-      0.16, -5.50,   # 10  aligned approach (south entry x_center, corrected for GPS ENU dx)
+      0.16, -5.50,   # 10  aligned approach (x=0.16 = door center in /odom after GPS ENU offset)
       0.16, -4.10,   # 11  just outside south wall (y_wall=-4.149)
 
       # ============================================================
       # INDOOR PASS 1 — EAST ROOM THEN WEST ROOM  (WP12–47)
-      # F3 FIX: every door crossing now has pre-approach + door + post-cross
       # Route: SC → Door B ←→ → SE → Door B2 ↕ → NE → return
       #        SC → Door A ←→ → SW → Door A2 ↕ → NW → return → exit
       # ============================================================
-      0.16, -3.55,   # 12  inside south entry  [S14: x=0.16 original — robust to ±GPS ENU offset]
-      0.16, -3.45,   # 13  corridor level       [S14: x=0.16 original — robust to ±GPS ENU offset]
+      0.16, -3.55,   # 12  inside south entry
+      0.16, -3.45,   # 13  corridor level
 
-      # [S14] NORTH CLEARANCE — drive north before turning east toward Door B.
-      # Heading from WP13→14: ≈90° N (away from south wall + east jamb).
-      # Heading from WP14→15: atan2(-1.43, 3.63) ≈ -21° SE — clear SC interior path.
-      0.16, -3.00,   # 14  NORTH CLEARANCE — SC room interior [S14 NEW]
+      # NORTH CLEARANCE: drive north before turning east toward Door B to avoid
+      # east jamb collision caused by GPS x-offset during geofence transition.
+      0.16, -3.00,   # 14  north clearance — SC room interior
 
       # ── Door B  W→E  (SC → SE) ──────────────────────────────────
        3.35, -3.43,   # 15  PRE-APPROACH Door B from west (x_wall−0.50)
@@ -224,9 +174,9 @@ trajectory_controller:
       -4.00, -3.47,   # 45  PRE-APPROACH Door A from west (x_wall−0.50)
       -3.501,-3.47,   # 46  *** Door A return east (x_wall=−3.501, y_c=−3.47)
       -3.00, -3.47,   # 47  POST-CROSS Door A east side (x_wall+0.50)
-      0.16, -3.45,   # 48  south exit corridor  [S14: x=0.16 original — robust to ±GPS ENU offset]
-      0.16, -3.55,   # 49  south exit alignment [S14: x=0.16 original — robust to ±GPS ENU offset]
-      0.16, -6.16,   # 50  outdoor exit         [S14: x=0.16 original — robust to ±GPS ENU offset]
+      0.16, -3.45,   # 48  south exit corridor
+      0.16, -3.55,   # 49  south exit alignment
+      0.16, -6.16,   # 50  outdoor exit
 
       # ============================================================
       # OUTDOOR SOUTH LOOP  (WP51–58)
@@ -242,19 +192,17 @@ trajectory_controller:
 
       # ============================================================
       # INDOOR PASS 2 — WEST WING + NORTH-CENTER  (WP59–95)
-      # F3 FIX: door-aligned approach/post-cross at every crossing.
       # Route: SC → Door A ←→ → SW → Door A2 ↕ → NW
       #           → Door C2 ←→ → NC → Door C2 ←→ → NW
       #           → Door A2 ↕ → SW → Door A ←→ → SC → exit
       # ============================================================
-      0.16, -5.50,   # 59  approach          [S14: x=0.16 original — robust to ±GPS ENU offset]
-      0.16, -4.10,   # 60  outside south wall [S14: x=0.16 original — robust to ±GPS ENU offset]
-      0.16, -3.55,   # 61  inside south entry [S14: x=0.16 original — robust to ±GPS ENU offset]
-      0.16, -3.45,   # 62  corridor level     [S14: x=0.16 original — robust to ±GPS ENU offset]
+      0.16, -5.50,   # 59  approach
+      0.16, -4.10,   # 60  outside south wall
+      0.16, -3.55,   # 61  inside south entry
+      0.16, -3.45,   # 62  corridor level
 
-      # [S14] NORTH CLEARANCE — drive north before turning west toward Door A.
-      # Heading WP62→63: ≈90° N. Heading WP63→64: atan2(-1.47,-2.72) ≈ 208° SW — clean.
-      0.16, -2.00,   # 63  NORTH CLEARANCE — SC room interior [S14 NEW]
+      # NORTH CLEARANCE: drive north before turning west toward Door A.
+      0.16, -2.00,   # 63  north clearance — SC room interior
 
       # ── Door A  E→W  (SC → SW) ──────────────────────────────────
       -3.00, -3.47,   # 64  PRE-APPROACH Door A from east (x_wall+0.50)
@@ -277,17 +225,10 @@ trajectory_controller:
       -3.510, 0.90,   # 75  *** Door C2 crossing (x_wall=−3.510, y_c=0.902)
       -3.01,  0.90,   # 76  POST-CROSS Door C2 east side (x_wall+0.50)
 
-      # north-center room — cardinal-only movement (S15 FIX)
-      # Previous WPs 77-79 had diagonal transitions:
-      #   Old 77: (-2.14, 0.96) → Old 78 (-0.14, 2.92) [Δx=+2.0, Δy=+1.96] ❌ DIAGONAL
-      #   Old 78: (-0.14, 2.92) → Old 79 (-1.77, 0.96) [Δx=-1.63, Δy=-1.96] ❌ DIAGONAL
-      # S15 Fix: Cardinal-only path at x=-2.14 (NC room center)
-      #   New 77: (-2.14, 0.96) → New 78 (-2.14, 2.80) [Δy=+1.84] ✓ CARDINAL (N)
-      #   New 78: (-2.14, 2.80) → New 79 (-2.14, 0.96) [Δy=-1.84] ✓ CARDINAL (S)
-      # This maintains 3 WPs (77,78,79) while enforcing pure N-S movement.
+      # north-center room — pure N then pure S (cardinal-only constraint)
       -2.14,  0.96,   # 77  north-center room center
-      -2.14,  2.80,   # 78  north-center room far north (pure N)
-      -2.14,  0.96,   # 79  return to center (pure S)
+      -2.14,  2.80,   # 78  north-center room far north
+      -2.14,  0.96,   # 79  return to center
 
       # ── Door C2  E→W  (NC → NW) ─────────────────────────────────
       -3.01,  0.90,   # 80  PRE-APPROACH Door C2 from east (x_wall+0.50)
@@ -306,9 +247,9 @@ trajectory_controller:
       -4.00, -3.47,   # 89  PRE-APPROACH Door A from west (x_wall−0.50)
       -3.501,-3.47,   # 90  *** Door A return east (x_wall=−3.501, y_c=−3.47)
       -3.00, -3.47,   # 91  POST-CROSS Door A east side (x_wall+0.50)
-      0.16, -3.45,   # 92  south exit corridor  [S14: x=0.16 original — robust to ±GPS ENU offset]
-      0.16, -3.55,   # 93  south exit alignment [S14: x=0.16 original — robust to ±GPS ENU offset]
-      0.16, -6.00,   # 94  outdoor              [S14: x=0.16 original — robust to ±GPS ENU offset]
+      0.16, -3.45,   # 92  south exit corridor
+      0.16, -3.55,   # 93  south exit alignment
+      0.16, -6.00,   # 94  outdoor
 
       # ============================================================
       # OUTDOOR LARGE E+NW LOOP  (WP95–106)
@@ -328,17 +269,15 @@ trajectory_controller:
 
       # ============================================================
       # INDOOR PASS 3 — EAST ROOM  (WP107–130)
-      # F3 FIX: door-aligned approach/post-cross at every crossing.
       # Route: SC → Door B ←→ → SE → Door B2 ↕ → NE → return → exit
       # ============================================================
-      0.16, -5.50,   # 107 approach          [S14: x=0.16 original — robust to ±GPS ENU offset]
-      0.16, -4.10,   # 108 outside south wall [S14: x=0.16 original — robust to ±GPS ENU offset]
-      0.16, -3.55,   # 109 inside south entry [S14: x=0.16 original — robust to ±GPS ENU offset]
-      0.16, -3.45,   # 110 corridor level     [S14: x=0.16 original — robust to ±GPS ENU offset]
+      0.16, -5.50,   # 107 approach
+      0.16, -4.10,   # 108 outside south wall
+      0.16, -3.55,   # 109 inside south entry
+      0.16, -3.45,   # 110 corridor level
 
-      # [S14] NORTH CLEARANCE — drive north before turning east toward Door B.
-      # Heading WP110→111: ≈90° N. Heading WP111→112: ≈-21° SE — clear SC interior.
-      0.16, -2.00,   # 111 NORTH CLEARANCE — SC room interior [S14 NEW]
+      # NORTH CLEARANCE: drive north before turning east toward Door B.
+      0.16, -2.00,   # 111 north clearance — SC room interior
 
       # ── Door B  W→E  (SC → SE) ──────────────────────────────────
        3.35, -3.43,   # 112 PRE-APPROACH Door B from west (x_wall−0.50)
@@ -362,29 +301,17 @@ trajectory_controller:
        4.35, -3.43,   # 124 PRE-APPROACH Door B from east (x_wall+0.50)
        3.849,-3.43,   # 125 *** Door B return west (x_wall=3.849, y_c=−3.43)
        3.35, -3.43,   # 126 POST-CROSS Door B west side (x_wall−0.50)
-      0.16, -3.45,   # 127 south exit corridor  [S14: x=0.16 original — robust to ±GPS ENU offset]
-      0.16, -3.55,   # 128 south exit alignment [S14: x=0.16 original — robust to ±GPS ENU offset]
-      0.16, -6.80,   # 129 outdoor              [S14: x=0.16 original — robust to ±GPS ENU offset]
+      0.16, -3.45,   # 127 south exit corridor
+      0.16, -3.55,   # 128 south exit alignment
+      0.16, -6.80,   # 129 outdoor
        4.72,-11.14    # 130 END
     ]
 
-    # ================================================================
-    # CONTROLLER PARAMETERS
-    # ================================================================
-    #
-    # WP count: 92 → 128 (S9 door-approach) → 131 (S14 south-entry x-fix).
-    # S14 changes:
-    #   - 21 WPs: x=0.16 → x=-0.28 on all south entry/exit sequences
-    #   - 3 WPs inserted: (-0.28,-2.00) north clearance after each indoor entry
-    # All other parameters unchanged from Session 8.
-    #
-    # Distance check: approach offset (0.50m) > distance_threshold (0.45m) ✓ WPs never skipped
-    # → WP will NOT be skipped — robot must physically reach approach point.
-    # ================================================================
-
-    linear_speed:       0.5    # [B6 FIX] was 0.5 
-    angular_gain:       0.5    # [OPTIMAL] K = 0.90 × ω_max/θ_th — smooth proportional at threshold, 55% faster 90° turns
+    # approach offset (0.50m) > distance_threshold (0.45m): door approach WPs are
+    # always captured before the wall crossing, regardless of localization error.
+    linear_speed:       0.5
+    angular_gain:       0.5
     max_angular_speed:  0.5
-    distance_threshold: 0.45   # [OPTIMAL] N = d/(v·Δt) = 0.45/0.15 = 3.0 cycles — reliable WP capture at v=1.5
-    angle_threshold:    0.7    # [OPTIMAL] > atan(σ_GPS/d_th) = 0.611 rad — GPS noise margin = +5.2°
+    distance_threshold: 0.45
+    angle_threshold:    0.7
     loop_trajectory:    false

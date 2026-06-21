@@ -3,7 +3,14 @@
 <package format="3">
   <name>gps_odometry_pkg</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>
+    EKF-based GPS+Odometry localization stack (KF-2) for TurtleBot3 Burger.
+    Runs ekf_local2 (continuous odom+IMU EKF) and ekf_filter_node_gps_enc
+    (global GPS+Odometry EKF, output /odometry/global2). Feeds the BT fusion
+    layer alongside KF-1. navsat_transform2 config is present but intentionally
+    not launched to avoid a race condition on /odometry/gps.
+  </description>
+  <maintainer email="yousefhesham.yh112@gmail.com">YousefAbdelhady</maintainer>
   <maintainer email="s353110@studenti.polito.it">pietro</maintainer>
   <license>Apache-2.0</license>
 
