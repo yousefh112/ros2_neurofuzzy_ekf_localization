@@ -36,6 +36,8 @@
  *    /bt/fuzzy_weights     std_msgs/Float32MultiArray  [α1, α2, slip_error]
  *    /bt/status            std_msgs/String             active branch label
  *    /ann/viz_marker       visualization_msgs/Marker   ANN point (map frame, RViz)
+ *    /bt/path_viz          visualization_msgs/Marker   Yellow LINE_STRIP of full
+ *                                                      bt_fused trajectory (map frame)
  *    /joint_states         sensor_msgs/JointState      wheel angles → RSP TF edges
  * ============================================================================
  */
@@ -384,6 +386,11 @@ public:
         ann_marker_pub_ = create_publisher<visualization_msgs::msg::Marker>(
             "/ann/viz_marker", 10);
 
+        // Yellow LINE_STRIP accumulating all bt_fused positions (map frame).
+        // append_path_point() is called by publish_bt_fused() on every BT tick.
+        path_marker_pub_ = create_publisher<visualization_msgs::msg::Marker>(
+            "/bt/path_viz", 10);
+
         // ── Wheel joint states → robot_state_publisher TF edges ──────────────
         // WHY: libgazebo_ros_joint_state_publisher.so is NOT shipped with
         //      ros-humble-gazebo-plugins on this installation; the xacro plugin
@@ -581,6 +588,36 @@ public:
         state->bt_fused_valid     = true;
     }
 
+    // ── append_path_point() ──────────────────────────────────────────────────
+    // Appends (x,y) from bt_fused to the trajectory buffer and republishes
+    // the full yellow LINE_STRIP on /bt/path_viz.
+    // Single Marker id=0 with action=ADD overwrites itself — no flicker.
+    void append_path_point(double x, double y)
+    {
+        if (path_points_.size() >= PATH_MAX_POINTS) {
+            const std::size_t drop = PATH_MAX_POINTS / 10;
+            path_points_.erase(path_points_.begin(),
+                               path_points_.begin() + static_cast<long>(drop));
+        }
+        geometry_msgs::msg::Point p;
+        p.x = x; p.y = y; p.z = 0.02;
+        path_points_.push_back(p);
+
+        visualization_msgs::msg::Marker m;
+        m.header.stamp       = now();
+        m.header.frame_id    = "map";
+        m.ns                 = "bt_path";
+        m.id                 = 0;
+        m.type               = visualization_msgs::msg::Marker::LINE_STRIP;
+        m.action             = visualization_msgs::msg::Marker::ADD;
+        m.pose.orientation.w = 1.0;
+        m.scale.x            = 0.05;
+        m.color.r = 1.0f; m.color.g = 1.0f; m.color.b = 0.0f; m.color.a = 0.95f;
+        m.lifetime = rclcpp::Duration(0, 0);
+        m.points   = path_points_;
+        path_marker_pub_->publish(m);
+    }
+
 private:
     rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr  sub_gps_;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr      sub_gps_odom_;
@@ -594,6 +631,11 @@ private:
     // map-frame visualization_msgs/Marker for the RViz /ann/viz_marker display.
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr ann_marker_pub_;
     int ann_marker_seq_{0};   // rolling ID; mod 10000 → short RViz trail
+
+    // Yellow LINE_STRIP trajectory (published on /bt/path_viz).
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr path_marker_pub_;
+    std::vector<geometry_msgs::msg::Point>                        path_points_;
+    static constexpr std::size_t PATH_MAX_POINTS = 50000;
 
     // Wheel joint state publisher — feeds robot_state_publisher so it can emit
     // wheel_left_link / wheel_right_link TF edges (fixes RViz "No transform" error).
@@ -646,6 +688,9 @@ static void publish_bt_fused(StateHub& hub, double x, double y)
     // update_map_to_odom_tf() computes T_map_odom = T_map_base * inv(T_odom_base)
     // and caches it for the 30 Hz broadcast timer inside StateHub.
     hub.update_map_to_odom_tf(x, y, yaw);
+
+    // Append to yellow PATH trail on /bt/path_viz
+    hub.append_path_point(x, y);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -674,6 +719,14 @@ class CheckSensorsReady : public ConditionNode
 public:
     CheckSensorsReady(const std::string& name, std::shared_ptr<StateHub> hub)
     : ConditionNode(name, {}), hub_(hub) {}
+
+    static BT::KeyValueVector metadata()
+    {
+        return {
+            {"bg_color", "#0D3B38"},
+            {"fg_color", "#4ECDC4"}
+        };
+    }
 
     NodeStatus tick() override
     {
@@ -705,6 +758,14 @@ class CheckGpsSignal : public ConditionNode
 public:
     CheckGpsSignal(const std::string& name, std::shared_ptr<StateHub> hub)
     : ConditionNode(name, {}), hub_(hub) {}
+
+    static BT::KeyValueVector metadata()
+    {
+        return {
+            {"bg_color", "#0D3B38"},
+            {"fg_color", "#4ECDC4"}
+        };
+    }
 
     NodeStatus tick() override
     {
@@ -745,6 +806,14 @@ public:
     AlignSensorFrames(const std::string& name, std::shared_ptr<StateHub> hub)
     : SyncActionNode(name, {}), hub_(hub) {}
 
+    static BT::KeyValueVector metadata()
+    {
+        return {
+            {"bg_color", "#0D2847"},
+            {"fg_color", "#5BA4E5"}
+        };
+    }
+
     NodeStatus tick() override
     {
         std::lock_guard<std::mutex> lk(hub_->state->mtx);
@@ -774,6 +843,14 @@ class EnsureKF1Active : public SyncActionNode
 public:
     EnsureKF1Active(const std::string& name, std::shared_ptr<StateHub> hub)
     : SyncActionNode(name, {}), hub_(hub) {}
+
+    static BT::KeyValueVector metadata()
+    {
+        return {
+            {"bg_color", "#0D2847"},
+            {"fg_color", "#5BA4E5"}
+        };
+    }
 
     NodeStatus tick() override
     {
@@ -805,6 +882,14 @@ class EnsureKF2Active : public SyncActionNode
 public:
     EnsureKF2Active(const std::string& name, std::shared_ptr<StateHub> hub)
     : SyncActionNode(name, {}), hub_(hub) {}
+
+    static BT::KeyValueVector metadata()
+    {
+        return {
+            {"bg_color", "#0D2847"},
+            {"fg_color", "#5BA4E5"}
+        };
+    }
 
     NodeStatus tick() override
     {
@@ -845,6 +930,14 @@ public:
     RunComplementaryFilter_GPS(const std::string& name, std::shared_ptr<StateHub> hub)
     : SyncActionNode(name, {}), hub_(hub) {}
 
+    static BT::KeyValueVector metadata()
+    {
+        return {
+            {"bg_color", "#0D2847"},
+            {"fg_color", "#5BA4E5"}
+        };
+    }
+
     NodeStatus tick() override
     {
         std::lock_guard<std::mutex> lk(hub_->state->mtx);
@@ -877,6 +970,14 @@ class PublishFusedPosition_GPS : public SyncActionNode
 public:
     PublishFusedPosition_GPS(const std::string& name, std::shared_ptr<StateHub> hub)
     : SyncActionNode(name, {}), hub_(hub) {}
+
+    static BT::KeyValueVector metadata()
+    {
+        return {
+            {"bg_color", "#0D2847"},
+            {"fg_color", "#5BA4E5"}
+        };
+    }
 
     NodeStatus tick() override
     {
@@ -918,6 +1019,14 @@ class CollectAndTrainNN : public SyncActionNode
 public:
     CollectAndTrainNN(const std::string& name, std::shared_ptr<StateHub> hub)
     : SyncActionNode(name, {}), hub_(hub) {}
+
+    static BT::KeyValueVector metadata()
+    {
+        return {
+            {"bg_color", "#0D2847"},
+            {"fg_color", "#5BA4E5"}
+        };
+    }
 
     NodeStatus tick() override
     {
@@ -967,6 +1076,14 @@ public:
     HaltKF1_FreezeKF2GPS(const std::string& name, std::shared_ptr<StateHub> hub)
     : SyncActionNode(name, {}), hub_(hub) {}
 
+    static BT::KeyValueVector metadata()
+    {
+        return {
+            {"bg_color", "#3D2010"},
+            {"fg_color", "#E8A060"}
+        };
+    }
+
     NodeStatus tick() override
     {
         std::lock_guard<std::mutex> lk(hub_->state->mtx);
@@ -1005,6 +1122,14 @@ public:
     CalculateSlipError(const std::string& name, std::shared_ptr<StateHub> hub)
     : SyncActionNode(name, {}), hub_(hub) {}
 
+    static BT::KeyValueVector metadata()
+    {
+        return {
+            {"bg_color", "#3D2010"},
+            {"fg_color", "#E8A060"}
+        };
+    }
+
     NodeStatus tick() override
     {
         std::lock_guard<std::mutex> lk(hub_->state->mtx);
@@ -1042,6 +1167,14 @@ class FuzzifySlipError : public SyncActionNode
 public:
     FuzzifySlipError(const std::string& name, std::shared_ptr<StateHub> hub)
     : SyncActionNode(name, {}), hub_(hub) {}
+
+    static BT::KeyValueVector metadata()
+    {
+        return {
+            {"bg_color", "#3D2010"},
+            {"fg_color", "#E8A060"}
+        };
+    }
 
     NodeStatus tick() override
     {
@@ -1088,6 +1221,14 @@ public:
     ActivateFuzzyRules(const std::string& name, std::shared_ptr<StateHub> hub)
     : SyncActionNode(name, {}), hub_(hub) {}
 
+    static BT::KeyValueVector metadata()
+    {
+        return {
+            {"bg_color", "#3D2010"},
+            {"fg_color", "#E8A060"}
+        };
+    }
+
     NodeStatus tick() override
     {
         std::lock_guard<std::mutex> lk(hub_->state->mtx);
@@ -1132,6 +1273,14 @@ class DefuzzifyWeights : public SyncActionNode
 public:
     DefuzzifyWeights(const std::string& name, std::shared_ptr<StateHub> hub)
     : SyncActionNode(name, {}), hub_(hub) {}
+
+    static BT::KeyValueVector metadata()
+    {
+        return {
+            {"bg_color", "#3D2010"},
+            {"fg_color", "#E8A060"}
+        };
+    }
 
     NodeStatus tick() override
     {
@@ -1183,6 +1332,14 @@ class FuseNN_KF2_Adaptive : public SyncActionNode
 public:
     FuseNN_KF2_Adaptive(const std::string& name, std::shared_ptr<StateHub> hub)
     : SyncActionNode(name, {}), hub_(hub) {}
+
+    static BT::KeyValueVector metadata()
+    {
+        return {
+            {"bg_color", "#3D2010"},
+            {"fg_color", "#E8A060"}
+        };
+    }
 
     NodeStatus tick() override
     {
